@@ -44,7 +44,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.organization=BrunoAlexys
+            -Dsonar.organization=brunoalexys
             -Dsonar.projectKey=BrunoAlexys_mobile-comanda
             -Dsonar.sources=lib
             -Dsonar.tests=test
