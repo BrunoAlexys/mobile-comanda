@@ -1,0 +1,62 @@
+name: Flutter CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build_and_test:
+    name: Build, Test & Analyze
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout do código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup do Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.35.1
+          cache: true
+
+      - name: 🔧 Cache das dependências do Pub
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+      
+      - name: 📥 Instalar dependências
+        run: flutter pub get
+
+      - name: 🧐 Verificar formatação
+        run: flutter format --output=none --set-exit-if-changed .
+
+      - name: ✨ Analisar o código (Lint)
+        run: flutter analyze .
+
+      - name: 🧪 Rodar os testes
+        run: flutter test --coverage
+
+      - name: sonar.sources=lib
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=BrunoAlexys
+            -Dsonar.projectKey=BrunoAlexys_mobile-comanda
+            -Dsonar.sources=lib
+            -Dsonar.tests=test
+            -Dsonar.coverage.lcov.reportPaths=coverage/lcov.info
