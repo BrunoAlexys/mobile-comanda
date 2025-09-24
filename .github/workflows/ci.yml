@@ -31,7 +31,7 @@ jobs:
       - name: 📥 Instalar dependências e Verificar Código
         run: |
           flutter pub get
-          flutter format --output=none --set-exit-if-changed .
+          dart format --output=none --set-exit-if-changed .
           flutter analyze .
 
       - name: 🧪 Rodar os testes
