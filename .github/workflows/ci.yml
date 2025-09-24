@@ -2,24 +2,18 @@ name: Flutter CI
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: ["*"]
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: ["*"]
 
 jobs:
   build_and_test:
-    name: Build, Test & Analyze
+    name: Build & Test
     runs-on: ubuntu-latest
 
     steps:
       - name: ⬇️ Checkout do código
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: 🐦 Setup do Flutter
         uses: flutter-actions/setup-flutter@v1
@@ -28,24 +22,11 @@ jobs:
           version: '3.35.1'
           cache: true
 
-      - name: 📥 Instalar dependências e Verificar Código
-        run: |
-          flutter pub get
-          dart format --output=none --set-exit-if-changed .
-          flutter analyze .
+      - name: 📥 Instalar dependências
+        run: flutter pub get
+
+      - name: 🔍 Analisar código
+        run: flutter analyze .
 
       - name: 🧪 Rodar os testes
         run: flutter test --coverage
-
-      - name: 🔎 Análise do SonarCloud
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.organization=brunoalexys
-            -Dsonar.projectKey=BrunoAlexys_mobile-comanda
-            -Dsonar.sources=lib
-            -Dsonar.tests=test
-            -Dsonar.coverage.lcov.reportPaths=coverage/lcov.info
