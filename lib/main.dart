@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
               },
               icon: Image.asset(AppIcons.send, width: 24,),
               borderRadius: 8,
-              gradientColors: const[
+              gradientColors: const [
                AppColors.redInicial,
                 AppColors.redFinal,
               ],
