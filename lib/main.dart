@@ -23,7 +23,6 @@ class MyApp extends StatelessWidget {
             orderTotal: 0,
               text: "Avançar",
               onPressed: () {
-              print('Botão foi pressionado!');
               },
               icon: Image.asset(AppIcons.send, width: 24 ,),
               borderRadius: 8,
