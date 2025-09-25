@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: CustomButton(
-            orderTotal: 0,
+              orderTotal: 0,
               text: "Avançar",
               onPressed: () {
               print('Botão foi pressionado!');
