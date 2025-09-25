@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_comanda/util/constants.dart';
+import 'package:mobile_comanda/widgets/custom_button.dart';
 import 'package:mobile_comanda/widgets/custom_input.dart';
 
 void main() {
@@ -18,11 +20,19 @@ class MyApp extends StatelessWidget {
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: CustomInput(
-              hintText: 'Telefone',
-              keyboardType: TextInputType.phone,
-              suffixIcon: Icon(Icons.phone, color: Colors.grey),
-            ),
+            child: CustomButton(
+            orderTotal: 0,
+              text: "Avançar",
+              onPressed: () {
+              print('Botão foi pressionado!');
+              },
+              icon: Image.asset(AppIcons.send, width: 24 ,),
+              borderRadius: 8,
+              gradientColors: const[
+               AppColors.redInicial,
+                AppColors.redFinal,
+              ],
+            )
           ),
         ),
       ),
