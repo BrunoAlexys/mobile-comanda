@@ -19,18 +19,6 @@ class MyApp extends StatelessWidget {
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: CustomButton(
-              orderTotal: 0,
-              text: "Avançar",
-              onPressed: () {
-              },
-              icon: Image.asset(AppIcons.send, width: 24),
-              borderRadius: 8,
-              gradientColors: const [
-               AppColors.redInicial,
-                AppColors.redFinal,
-              ],
-            )
           ),
         ),
         bottomNavigationBar: const CustomMenu(),
