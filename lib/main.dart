@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_comanda/widgets/custom_input.dart';
 import 'package:mobile_comanda/widgets/custom_menu.dart';
 
 void main() {
