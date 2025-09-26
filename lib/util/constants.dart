@@ -4,6 +4,6 @@ class AppIcons {
 }
 
 class AppColors {
-  static const String redInicial = 'EF4444';
+  static const String redInitial = 'EF4444';
   static const String redFinal = 'DC2626';
 }
