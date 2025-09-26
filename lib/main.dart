@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
               text: "Avançar",
               onPressed: () {
               },
-              icon: Image.asset(AppIcons.send, width: 24,),
+              icon: Image.asset(AppIcons.send, width: 24),
               borderRadius: 8,
               gradientColors: const [
                AppColors.redInicial,
