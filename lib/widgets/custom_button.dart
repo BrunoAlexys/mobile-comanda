@@ -1,36 +1,30 @@
 import 'package:flutter/material.dart';
 
-import '../util/utils.dart';
-
 class CustomButton extends StatelessWidget {
   final double? width;
   final double? height;
   final double? borderRadius;
-  final double? orderTotal;
   final Widget? icon;
   final String text;
-  final List<String>? gradientColors;
+  final List<Color>? gradientColors;
   final VoidCallback? onPressed;
+  final bool isEnabled;
 
   const CustomButton({
     super.key,
     this.width,
     this.height,
-    this.orderTotal,
     this.icon,
     this.borderRadius,
     required this.text,
     this.gradientColors,
     required this.onPressed,
+    this.isEnabled = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool isEnabled = orderTotal != null && orderTotal! > 0;
-
-    final List<Color> colors = gradientColors
-        ?.map((hex) => Utils.hexToColor(hex))
-        .toList() ??
+    final List<Color> colors = gradientColors ??
         [Theme.of(context).primaryColor, Theme.of(context).primaryColorDark];
 
     final activeGradient = LinearGradient(
@@ -46,11 +40,21 @@ class CustomButton extends StatelessWidget {
     );
 
     return Container(
+      key: const Key('custom_button_container'),
       width: width ?? double.infinity,
       height: height ?? 50,
       decoration: BoxDecoration(
         gradient: isEnabled ? activeGradient : inactiveGradient,
         borderRadius: BorderRadius.circular(borderRadius ?? 8.0),
+        boxShadow: isEnabled
+            ? [
+          BoxShadow(
+            color: colors.first.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          )
+        ]
+            : [],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius ?? 8.0),

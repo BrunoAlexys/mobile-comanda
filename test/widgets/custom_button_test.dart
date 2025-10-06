@@ -2,21 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_comanda/widgets/custom_button.dart';
 
+Future<void> _pumpTestWidget(WidgetTester tester, {required CustomButton button}) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Scaffold(body: button),
+    ),
+  );
+}
+
 void main() {
   group('CustomButton Widget Tests', () {
-    testWidgets('Renders correctly with text and icon', (
-        WidgetTester tester,
-        ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: CustomButton(
-              text: 'Finalizar Pedido',
-              icon: const Icon(Icons.check, color: Colors.white),
-              onPressed: () {},
-              orderTotal: 1,
-            ),
-          ),
+    testWidgets('Renders correctly with text and icon', (tester) async {
+      await _pumpTestWidget(
+        tester,
+        button: CustomButton(
+          text: 'Finalizar Pedido',
+          icon: const Icon(Icons.check, color: Colors.white),
+          onPressed: () {},
         ),
       );
 
@@ -24,22 +26,14 @@ void main() {
       expect(find.byIcon(Icons.check), findsOneWidget);
     });
 
-    testWidgets('Button is enabled and tappable when orderTotal is positive', (
-        WidgetTester tester,
-        ) async {
+    testWidgets('Button is enabled and tappable by default', (tester) async {
       bool wasPressed = false;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: CustomButton(
-              text: 'Tap me',
-              orderTotal: 50.0,
-              onPressed: () {
-                wasPressed = true;
-              },
-            ),
-          ),
+      await _pumpTestWidget(
+        tester,
+        button: CustomButton(
+          text: 'Tap me',
+          onPressed: () => wasPressed = true,
         ),
       );
 
@@ -49,22 +43,15 @@ void main() {
       expect(wasPressed, isTrue);
     });
 
-    testWidgets('Button is disabled and not tappable when orderTotal is zero', (
-        WidgetTester tester,
-        ) async {
+    testWidgets('Button is disabled and not tappable when isEnabled is false', (tester) async {
       bool wasPressed = false;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: CustomButton(
-              text: 'Tap me',
-              orderTotal: 0.0,
-              onPressed: () {
-                wasPressed = true;
-              },
-            ),
-          ),
+      await _pumpTestWidget(
+        tester,
+        button: CustomButton(
+          text: 'Tap me',
+          isEnabled: false,
+          onPressed: () => wasPressed = true,
         ),
       );
 
@@ -74,92 +61,41 @@ void main() {
       expect(wasPressed, isFalse);
     });
 
-    testWidgets('Button is disabled and not tappable when orderTotal is null', (
-        WidgetTester tester,
-        ) async {
-      bool wasPressed = false;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: CustomButton(
-              text: 'Tap me',
-              orderTotal: null,
-              onPressed: () {
-                wasPressed = true;
-              },
-            ),
-          ),
+    testWidgets('Displays inactive gradient when isEnabled is false', (tester) async {
+      await _pumpTestWidget(
+        tester,
+        button: CustomButton(
+          text: 'Disabled',
+          isEnabled: false,
+          onPressed: () {},
         ),
       );
 
-      await tester.tap(find.byType(CustomButton));
-      await tester.pump();
-
-      expect(wasPressed, isFalse);
-    });
-
-    testWidgets('Displays inactive gradient when disabled', (
-        WidgetTester tester,
-        ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: CustomButton(
-              text: 'Disabled',
-              orderTotal: 0,
-              onPressed: () {},
-            ),
-          ),
-        ),
-      );
-
-      final container = tester.widget<Container>(find.descendant(
-        of: find.byType(CustomButton),
-        matching: find.byType(Container),
-      ));
-
+      final container = tester.widget<Container>(find.byKey(const Key('custom_button_container')));
       final decoration = container.decoration as BoxDecoration;
       final gradient = decoration.gradient as LinearGradient;
 
-      final expectedColors = [Colors.grey.shade300, Colors.grey.shade400];
-
-      expect(gradient.colors, equals(expectedColors));
+      expect(gradient.colors, [Colors.grey.shade300, Colors.grey.shade400]);
     });
 
-    testWidgets('Displays active gradient when enabled', (
-        WidgetTester tester,
-        ) async {
-      final customColors = ['FF6347', 'FF4500'];
+    testWidgets('Displays active gradient when enabled', (tester) async {
+      const expectedColors = [Color(0xFFFF6347), Color(0xFFFF4500)];
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: CustomButton(
-              text: 'Enabled',
-              orderTotal: 1,
-              onPressed: () {},
-              gradientColors: customColors,
-            ),
-          ),
+      await _pumpTestWidget(
+        tester,
+        button: CustomButton(
+          text: 'Enabled',
+          isEnabled: true,
+          onPressed: () {},
+          gradientColors: expectedColors,
         ),
       );
 
-      final container = tester.widget<Container>(find.descendant(
-        of: find.byType(CustomButton),
-        matching: find.byType(Container),
-      ));
-
+      final container = tester.widget<Container>(find.byKey(const Key('custom_button_container')));
       final decoration = container.decoration as BoxDecoration;
       final gradient = decoration.gradient as LinearGradient;
 
-      final expectedColors = [
-        const Color(0xFFFF6347),
-        const Color(0xFFFF4500)
-      ];
-
-      expect(gradient.colors, equals(expectedColors));
+      expect(gradient.colors, expectedColors);
     });
   });
 }
-
