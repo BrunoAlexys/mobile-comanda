@@ -50,12 +50,12 @@ class CustomButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius ?? 8.0),
         boxShadow: isEnabled && colors.isNotEmpty
             ? [
-          BoxShadow(
-            color: colors.first.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          )
-        ]
+                BoxShadow(
+                  color: colors.first.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                )
+              ]
             : [],
       ),
       child: ClipRRect(
