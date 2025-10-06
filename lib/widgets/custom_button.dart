@@ -24,8 +24,10 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<Color> colors = gradientColors ??
-        [Theme.of(context).primaryColor, Theme.of(context).primaryColorDark];
+    // LÓGICA CORRIGIDA: Usa as cores do tema se gradientColors for nulo OU VAZIO.
+    final List<Color> colors = (gradientColors != null && gradientColors!.isNotEmpty)
+        ? gradientColors!
+        : [Theme.of(context).primaryColor, Theme.of(context).primaryColorDark];
 
     final activeGradient = LinearGradient(
       colors: colors,
@@ -46,7 +48,7 @@ class CustomButton extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: isEnabled ? activeGradient : inactiveGradient,
         borderRadius: BorderRadius.circular(borderRadius ?? 8.0),
-        boxShadow: isEnabled
+        boxShadow: isEnabled && colors.isNotEmpty
             ? [
           BoxShadow(
             color: colors.first.withOpacity(0.3),
@@ -87,3 +89,4 @@ class CustomButton extends StatelessWidget {
     );
   }
 }
+

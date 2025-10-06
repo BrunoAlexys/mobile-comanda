@@ -5,6 +5,12 @@ import 'package:mobile_comanda/widgets/custom_button.dart';
 Future<void> _pumpTestWidget(WidgetTester tester, {required CustomButton button}) async {
   await tester.pumpWidget(
     MaterialApp(
+      theme: ThemeData(
+        // CORREÇÃO: Definimos as cores explicitamente para garantir que o
+        // teste seja previsível e não dependa de lógicas de tema complexas.
+        primaryColor: Colors.blue.shade500,
+        primaryColorDark: Colors.blue.shade700,
+      ),
       home: Scaffold(body: button),
     ),
   );
@@ -97,5 +103,25 @@ void main() {
 
       expect(gradient.colors, expectedColors);
     });
+
+    testWidgets('Falls back to theme colors when gradientColors list is empty', (tester) async {
+      await _pumpTestWidget(
+        tester,
+        button: CustomButton(
+          text: 'Fallback',
+          isEnabled: true,
+          onPressed: () {},
+          gradientColors: const [],
+        ),
+      );
+
+      final container = tester.widget<Container>(find.byKey(const Key('custom_button_container')));
+      final decoration = container.decoration as BoxDecoration;
+      final gradient = decoration.gradient as LinearGradient;
+
+      expect(gradient.colors, [Colors.blue.shade500, Colors.blue.shade700]);
+      expect(decoration.boxShadow, isNotNull);
+    });
   });
 }
+
