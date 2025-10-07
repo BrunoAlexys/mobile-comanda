@@ -24,7 +24,6 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // LÓGICA CORRIGIDA: Usa as cores do tema se gradientColors for nulo OU VAZIO.
     final List<Color> colors = (gradientColors != null && gradientColors!.isNotEmpty)
         ? gradientColors!
         : [Theme.of(context).primaryColor, Theme.of(context).primaryColorDark];
@@ -50,12 +49,12 @@ class CustomButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius ?? 8.0),
         boxShadow: isEnabled && colors.isNotEmpty
             ? [
-                BoxShadow(
-                  color: colors.first.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                )
-              ]
+          BoxShadow(
+            color: colors.first.withAlpha((255 * 0.3).round()),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          )
+        ]
             : [],
       ),
       child: ClipRRect(
@@ -89,4 +88,3 @@ class CustomButton extends StatelessWidget {
     );
   }
 }
-
