@@ -6,8 +6,6 @@ Future<void> _pumpTestWidget(WidgetTester tester, {required CustomButton button}
   await tester.pumpWidget(
     MaterialApp(
       theme: ThemeData(
-        // CORREÇÃO: Definimos as cores explicitamente para garantir que o
-        // teste seja previsível e não dependa de lógicas de tema complexas.
         primaryColor: Colors.blue.shade500,
         primaryColorDark: Colors.blue.shade700,
       ),
