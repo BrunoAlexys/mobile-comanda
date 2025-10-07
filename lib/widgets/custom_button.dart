@@ -50,7 +50,7 @@ class CustomButton extends StatelessWidget {
         boxShadow: isEnabled && colors.isNotEmpty
             ? [
           BoxShadow(
-            color: colors.first.withAlpha((255 * 0.3).round())
+            color: colors.first.withAlpha((255 * 0.3).round()),
             blurRadius: 10,
             offset: const Offset(0, 5),
           )
