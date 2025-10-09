@@ -99,14 +99,13 @@ class CustomPopup extends StatelessWidget {
     );
   }
 
-  // NOVO: Método para construir apenas o botão de confirmação com gradiente
   Widget _buildConfirmButton(BuildContext context) {
-    final List<Color> colors = (confirmButtonGradientColors != null && confirmButtonGradientColors!.isNotEmpty)
+    final List<Color> colors = confirmButtonGradientColors?.isNotEmpty == true
         ? confirmButtonGradientColors!
         : [Theme.of(context).primaryColor, Theme.of(context).primaryColorDark];
 
     return Container(
-      height: 48, // Altura padrão
+      height: 48,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: colors,
