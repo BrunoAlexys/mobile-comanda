@@ -17,17 +17,19 @@ void setupLocator(GlobalKey<NavigatorState> navigatorKey) {
     () => FlutterSecureStorage(),
   );
 
+  locator.registerLazySingleton<AuthRepository>(
+    () => AuthRepository(locator<DioClient>()),
+  );
+
   locator.registerLazySingleton<AuthService>(
     () =>
         AuthService(locator<AuthRepository>(), locator<FlutterSecureStorage>()),
   );
 
   locator.registerLazySingleton<DioClient>(
-    () => DioClient(locator<Dio>(), navigatorKey, locator<AuthService>()),
+    () => DioClient(locator<Dio>(), navigatorKey),
   );
-  locator.registerLazySingleton<AuthRepository>(
-    () => AuthRepository(locator<DioClient>()),
-  );
+
   locator.registerLazySingleton<UserRepository>(
     () => UserRepository(locator<DioClient>()),
   );

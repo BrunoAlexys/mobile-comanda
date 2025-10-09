@@ -8,7 +8,6 @@ import 'dart:async' as _i3;
 import 'package:mobile_comanda/service/auth_service.dart' as _i4;
 import 'package:mobile_comanda/service/user_service.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i5;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -53,15 +52,60 @@ class MockAuthService extends _i1.Mock implements _i4.AuthService {
   }
 
   @override
-  _i3.Future<String> login(String? email, String? password) =>
+  _i3.Future<void> login(String? email, String? password) =>
       (super.noSuchMethod(
             Invocation.method(#login, [email, password]),
-            returnValue: _i3.Future<String>.value(
-              _i5.dummyValue<String>(
-                this,
-                Invocation.method(#login, [email, password]),
-              ),
-            ),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
           )
-          as _i3.Future<String>);
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> saveTokens({
+    required String? accessToken,
+    required String? refreshToken,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveTokens, [], {
+              #accessToken: accessToken,
+              #refreshToken: refreshToken,
+            }),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<String?> getAccessToken() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAccessToken, []),
+            returnValue: _i3.Future<String?>.value(),
+          )
+          as _i3.Future<String?>);
+
+  @override
+  _i3.Future<String?> getRefreshToken() =>
+      (super.noSuchMethod(
+            Invocation.method(#getRefreshToken, []),
+            returnValue: _i3.Future<String?>.value(),
+          )
+          as _i3.Future<String?>);
+
+  @override
+  _i3.Future<void> clearTokens() =>
+      (super.noSuchMethod(
+            Invocation.method(#clearTokens, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> logout() =>
+      (super.noSuchMethod(
+            Invocation.method(#logout, []),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 }

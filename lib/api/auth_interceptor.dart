@@ -6,20 +6,16 @@ import 'package:mobile_comanda/service/auth_service.dart';
 
 class AuthInterceptor extends QueuedInterceptor {
   final Dio dio;
-  final AuthService authService;
   final GlobalKey<NavigatorState> navigatorKey;
 
-  AuthInterceptor({
-    required this.dio,
-    required this.authService,
-    required this.navigatorKey,
-  });
+  AuthInterceptor({required this.dio, required this.navigatorKey});
 
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    final authService = GetIt.I<AuthService>();
     final accessToken = await authService.getAccessToken();
     if (accessToken != null) {
       options.headers['Authorization'] = 'Bearer $accessToken';
@@ -31,14 +27,14 @@ class AuthInterceptor extends QueuedInterceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (err.response?.statusCode == 401) {
-      final refreshToken = await authService.getRefreshToken();
+      final refreshToken = await GetIt.I<AuthService>().getRefreshToken();
       if (refreshToken == null) {
         return handler.next(err);
       }
 
       try {
         final newToken = await _refreshToken(refreshToken);
-        await authService.saveTokens(
+        await GetIt.I<AuthService>().saveTokens(
           accessToken: newToken['accessToken']!,
           refreshToken: newToken['refreshToken']!,
         );
@@ -49,7 +45,7 @@ class AuthInterceptor extends QueuedInterceptor {
         final response = await dio.fetch(err.requestOptions);
         return handler.resolve(response);
       } catch (e) {
-        await authService.clearTokens();
+        await GetIt.I<AuthService>().clearTokens();
         navigatorKey.currentState?.pushNamedAndRemoveUntil(
           AppRoutes.login,
           (route) => false,
@@ -81,8 +77,8 @@ class AuthInterceptor extends QueuedInterceptor {
 
     if (response.statusCode == 200 && response.data != null) {
       return {
-        'accessToken': response.data['accessToken'],
-        'refreshToken': response.data['refreshToken'],
+        'accessToken': response.data['accessToken'] as String,
+        'refreshToken': response.data['refreshToken'] as String,
       };
     } else {
       throw DioException(

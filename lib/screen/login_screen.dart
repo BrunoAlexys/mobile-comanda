@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mobile_comanda/core/app_routes.dart';
 import 'package:mobile_comanda/store/user_store.mobx.dart';
@@ -63,7 +64,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    _userStore.isLoading = true;
     await _saveOrClearCredentials();
 
     final email = _emailController.text.trim();
@@ -73,14 +73,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success && mounted) {
       Navigator.pushReplacementNamed(context, AppRoutes.home);
-      _userStore.isLoading = false;
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(_userStore.errorMessage ?? 'Erro ao fazer login.'),
         ),
       );
-      _userStore.isLoading = false;
     }
   }
 
@@ -249,22 +247,24 @@ class _LoginScreenState extends State<LoginScreen> {
                             left: 20,
                             right: 20,
                           ),
-                          child: CustomButton(
-                            text: _userStore.isLoading
-                                ? 'Entrando...'
-                                : 'Entrar',
-                            isEnabled:
-                                _emailController.text.isNotEmpty &&
-                                    _passwordController.text.isNotEmpty
-                                ? true
-                                : false,
-                            gradientColors: [
-                              Utils.hexToColor(AppColors.redInitial),
-                              Utils.hexToColor(AppColors.redFinal),
-                            ],
-                            onPressed: () {
-                              _login();
-                            },
+                          child: Observer(
+                            builder: (_) => CustomButton(
+                              text: _userStore.isLoading
+                                  ? 'Entrando...'
+                                  : 'Entrar',
+                              isEnabled:
+                                  _emailController.text.isNotEmpty &&
+                                      _passwordController.text.isNotEmpty
+                                  ? true
+                                  : false,
+                              gradientColors: [
+                                Utils.hexToColor(AppColors.redInitial),
+                                Utils.hexToColor(AppColors.redFinal),
+                              ],
+                              onPressed: () {
+                                _login();
+                              },
+                            ),
                           ),
                         ),
                       ],

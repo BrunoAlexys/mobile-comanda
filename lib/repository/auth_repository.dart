@@ -5,18 +5,27 @@ class AuthRepository {
 
   AuthRepository(this._dioClient);
 
-  Future<String> login(String email, String password) async {
+  Future<Map<String, String>> login(String email, String password) async {
     try {
       final response = await _dioClient.post(
         '/auth/login',
         data: {'email': email, 'password': password},
       );
 
-      if (response.statusCode == 200 && response.data != null) {
-        final String token = response.data['token'];
-        return token;
+      final responseData = response.data;
+      if (responseData == null || responseData is! Map) {
+        throw Exception('Resposta da API de login é inválida ou vazia.');
+      }
+
+      final accessToken = responseData['accessToken'] as String?;
+      final refreshToken = responseData['refreshToken'] as String?;
+
+      if (accessToken != null && refreshToken != null) {
+        return {'accessToken': accessToken, 'refreshToken': refreshToken};
       } else {
-        throw 'Resposta inesperada do servidor';
+        throw Exception(
+          'Chave "accessToken" ou "refreshToken" não encontrada na resposta da API.',
+        );
       }
     } catch (e) {
       rethrow;

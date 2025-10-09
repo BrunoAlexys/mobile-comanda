@@ -21,13 +21,17 @@ void main() {
   group('login', () {
     const testEmail = 'teste@email.com';
     const testPassword = 'password123';
-    const testToken = 'fake-jwt-token';
+    const testAccessToken = 'fake-access-token';
+    const testRefreshToken = 'fake-refresh-token';
     final loginData = {'email': testEmail, 'password': testPassword};
 
-    test('should return a token string when login is successful', () async {
+    test('should return tokens map when login is successful', () async {
       final fakeResponse = Response(
         statusCode: 200,
-        data: {'token': testToken},
+        data: {
+          'accessToken': testAccessToken,
+          'refreshToken': testRefreshToken,
+        },
         requestOptions: RequestOptions(path: '/auth/login'),
       );
 
@@ -37,7 +41,10 @@ void main() {
 
       final result = await authRepository.login(testEmail, testPassword);
 
-      expect(result, testToken);
+      expect(result, {
+        'accessToken': testAccessToken,
+        'refreshToken': testRefreshToken,
+      });
       verify(mockDioClient.post('/auth/login', data: loginData)).called(1);
     });
 
@@ -67,7 +74,13 @@ void main() {
 
       expect(
         () => authRepository.login(testEmail, testPassword),
-        throwsA(equals('Resposta inesperada do servidor')),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('Resposta da API de login é inválida ou vazia'),
+          ),
+        ),
       );
     });
 
@@ -86,17 +99,25 @@ void main() {
 
         expect(
           () => authRepository.login(testEmail, testPassword),
-          throwsA(equals('Resposta inesperada do servidor')),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('Resposta da API de login é inválida ou vazia'),
+            ),
+          ),
         );
       },
     );
 
     test(
-      'should throw an error if response data does not contain a token',
+      'should throw an error if response data does not contain required tokens',
       () async {
         final fakeResponse = Response(
           statusCode: 200,
-          data: {'message': 'Success'}, // Sem a chave 'token'
+          data: {
+            'message': 'Success',
+          }, // Sem as chaves 'accessToken' e 'refreshToken'
           requestOptions: RequestOptions(path: '/auth/login'),
         );
 
@@ -106,7 +127,15 @@ void main() {
 
         expect(
           () => authRepository.login(testEmail, testPassword),
-          throwsA(isA<TypeError>()),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains(
+                'Chave "accessToken" ou "refreshToken" não encontrada na resposta da API',
+              ),
+            ),
+          ),
         );
       },
     );

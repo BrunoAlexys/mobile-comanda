@@ -31,7 +31,8 @@ class MyApp extends StatelessWidget {
       title: 'Comanda Online',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      initialRoute: initialRoute,
+      //initialRoute: initialRoute,
+      home: LoginScreen(),
       onGenerateRoute: AppRoutes.generateRoute,
     );
   }

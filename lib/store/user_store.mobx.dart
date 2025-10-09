@@ -32,10 +32,8 @@ abstract class _UserStoreBase with Store {
     isLoading = true;
     errorMessage = null;
     try {
-      final String token = await _authService.login(email, password);
+      await _authService.login(email, password);
       final dioClient = GetIt.I<DioClient>();
-      dioClient.setAuthToken(token);
-
       final userData = await _userService.fetchUser(email);
       user = User.fromJson(userData);
       isLoading = false;

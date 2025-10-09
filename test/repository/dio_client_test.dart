@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dio/dio.dart';
@@ -11,16 +12,18 @@ void main() {
   late MockDio mockDio;
   late DioClient dioClient;
   late BaseOptions baseOptions;
+  late GlobalKey<NavigatorState> mockNavigatorKey;
   const testPath = '/test';
   final requestData = {'key': 'value'};
 
   setUp(() async {
     await dotenv.load(fileName: ".env");
     mockDio = MockDio();
+    mockNavigatorKey = GlobalKey<NavigatorState>();
     baseOptions = BaseOptions();
     mockito.when(mockDio.options).thenReturn(baseOptions);
     mockito.when(mockDio.interceptors).thenReturn(Interceptors());
-    dioClient = DioClient(mockDio);
+    dioClient = DioClient(mockDio, mockNavigatorKey);
   });
 
   group('Constructor and Configuration', () {

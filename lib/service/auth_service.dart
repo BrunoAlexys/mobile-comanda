@@ -7,11 +7,16 @@ class AuthService {
 
   AuthService(this._authRepository, this._secureStorage);
 
-  Future<String> login(String email, String password) async {
+  Future<void> login(String email, String password) async {
     try {
-      final token = await _authRepository.login(email, password);
-      await _secureStorage.write(key: 'auth_token', value: token);
-      return token;
+      final tokens = await _authRepository.login(email, password);
+
+      final accessToken = tokens['accessToken'];
+      final refreshToken = tokens['refreshToken'];
+
+      if (accessToken != null && refreshToken != null) {
+        await saveTokens(accessToken: accessToken, refreshToken: refreshToken);
+      }
     } catch (e) {
       rethrow;
     }
