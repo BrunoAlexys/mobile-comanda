@@ -16,4 +16,28 @@ class AuthService {
       rethrow;
     }
   }
+
+  Future<void> saveTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    await _secureStorage.write(key: 'access_token', value: accessToken);
+    await _secureStorage.write(key: 'refresh_token', value: refreshToken);
+  }
+
+  Future<String?> getAccessToken() async {
+    return await _secureStorage.read(key: 'access_token');
+  }
+
+  Future<String?> getRefreshToken() async {
+    return await _secureStorage.read(key: 'refresh_token');
+  }
+
+  Future<void> clearTokens() async {
+    await _secureStorage.deleteAll();
+  }
+
+  Future<void> logout() async {
+    await _secureStorage.delete(key: 'auth_token');
+  }
 }

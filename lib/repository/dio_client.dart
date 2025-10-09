@@ -1,11 +1,18 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mobile_comanda/api/auth_interceptor.dart';
+import 'package:mobile_comanda/service/auth_service.dart';
 
 class DioClient {
   final Dio _dio;
 
-  DioClient(this._dio) {
+  DioClient(
+    this._dio,
+    GlobalKey<NavigatorState> navigatorKey,
+    AuthService authService,
+  ) {
     _dio
       ..options.baseUrl = dotenv.env['BASE_URL']!
       ..options.connectTimeout = const Duration(seconds: 15)
@@ -14,6 +21,14 @@ class DioClient {
         'Content-Type': 'application/json; charset=UTF-8',
         'Accept': 'application/json',
       };
+
+    _dio.interceptors.add(
+      AuthInterceptor(
+        dio: _dio,
+        authService: authService,
+        navigatorKey: navigatorKey,
+      ),
+    );
 
     if (kDebugMode) {
       _dio.interceptors.add(
@@ -110,7 +125,7 @@ class DioClient {
             errorMessage = 'Requisição inválida.';
             break;
           case 401:
-            errorMessage = 'Não autorizado. Faça login novamente.';
+            errorMessage = 'E-mail ou senha inválidos. Faça login novamente.';
             break;
           case 403:
             errorMessage = 'Acesso negado.';

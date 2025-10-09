@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mobile_comanda/core/app_routes.dart';
-import 'package:mobile_comanda/story/user_store.mobx.dart';
+import 'package:mobile_comanda/store/user_store.mobx.dart';
 import 'package:mobile_comanda/util/constants.dart';
 import 'package:mobile_comanda/util/utils.dart';
 import 'package:mobile_comanda/widgets/custom_button.dart';
@@ -49,17 +49,21 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _saveOrClearCredentials() async {
-    final prefs = await SharedPreferences.getInstance();
     if (isChecked) {
+      final prefs = await SharedPreferences.getInstance();
       await prefs.setString('saved_email', _emailController.text.trim());
       await prefs.setBool('remember_me', true);
-    } else {
-      await prefs.remove('saved_email');
-      await prefs.remove('remember_me');
     }
   }
 
+  Future<void> _clearCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('saved_email');
+    await prefs.remove('remember_me');
+  }
+
   Future<void> _login() async {
+    _userStore.isLoading = true;
     await _saveOrClearCredentials();
 
     final email = _emailController.text.trim();
@@ -69,12 +73,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success && mounted) {
       Navigator.pushReplacementNamed(context, AppRoutes.home);
+      _userStore.isLoading = false;
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(_userStore.errorMessage ?? 'Erro ao fazer login.'),
         ),
       );
+      _userStore.isLoading = false;
     }
   }
 
@@ -133,7 +139,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-
               Expanded(
                 child: Container(
                   width: double.infinity,
@@ -208,6 +213,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       setState(() {
                                         isChecked = newValue!;
                                       });
+                                      if (!isChecked) {
+                                        _clearCredentials();
+                                      }
                                     },
                                   ),
                                   Text(
@@ -242,11 +250,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             right: 20,
                           ),
                           child: CustomButton(
-                            text: 'Entrar',
-                            orderTotal: 1,
+                            text: _userStore.isLoading
+                                ? 'Entrando...'
+                                : 'Entrar',
+                            isEnabled:
+                                _emailController.text.isNotEmpty &&
+                                    _passwordController.text.isNotEmpty
+                                ? true
+                                : false,
                             gradientColors: [
-                              AppColors.redInitial,
-                              AppColors.redFinal,
+                              Utils.hexToColor(AppColors.redInitial),
+                              Utils.hexToColor(AppColors.redFinal),
                             ],
                             onPressed: () {
                               _login();
