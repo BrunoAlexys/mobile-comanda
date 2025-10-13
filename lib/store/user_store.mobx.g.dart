@@ -80,6 +80,16 @@ mixin _$UserStore on _UserStoreBase, Store {
     );
   }
 
+  late final _$logoutAsyncAction = AsyncAction(
+    '_UserStoreBase.logout',
+    context: context,
+  );
+
+  @override
+  Future<void> logout() {
+    return _$logoutAsyncAction.run(() => super.logout());
+  }
+
   @override
   String toString() {
     return '''

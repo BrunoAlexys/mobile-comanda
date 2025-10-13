@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mobile_comanda/core/app_routes.dart';
+import 'package:mobile_comanda/core/locator.dart';
+import 'package:mobile_comanda/enum/biometric_preference.dart';
+import 'package:mobile_comanda/service/biometric_service.dart';
+import 'package:mobile_comanda/service/secure_storage_service.dart';
 import 'package:mobile_comanda/store/user_store.mobx.dart';
 import 'package:mobile_comanda/util/constants.dart';
 import 'package:mobile_comanda/util/utils.dart';
+import 'package:mobile_comanda/widgets/custom_alert.dart';
 import 'package:mobile_comanda/widgets/custom_button.dart';
 import 'package:mobile_comanda/widgets/custom_input.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,7 +26,12 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool isChecked = false;
-  final UserStore _userStore = GetIt.I<UserStore>();
+  final UserStore _userStore = locator<UserStore>();
+  final _biometricService = locator<BiometricService>();
+  final _secureStorageService = locator<SecureStorageService>();
+
+  bool _isBiometricAvailable = false;
+  BiometricPreference _biometricPreference = BiometricPreference.notChoosen;
 
   @override
   void dispose() {
@@ -34,6 +44,38 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _loadSavedCredentials();
+    _checkBiometrics();
+  }
+
+  Future<void> _checkBiometrics() async {
+    _isBiometricAvailable = await _biometricService.isBiometricAvailable();
+    _biometricPreference = await _secureStorageService.getBiometricPreference();
+
+    if (_isBiometricAvailable &&
+        _biometricPreference == BiometricPreference.enabled &&
+        mounted) {
+      await _authenticateWithBiometrics();
+    }
+
+    setState(() {});
+  }
+
+  Future<void> _authenticateWithBiometrics() async {
+    final isAuthenticated = await _biometricService.authenticate(
+      localizedReason: 'Faça login com sua digital ou reconhecimento facial',
+    );
+
+    if (isAuthenticated && mounted) {
+      final credentials = await _secureStorageService.getCredentials();
+      final email = credentials['email'];
+      final password = credentials['password'];
+
+      if (email != null && password != null) {
+        _emailController.text = email;
+        _passwordController.text = password;
+        await _login(isBiometricLogin: true);
+      }
+    }
   }
 
   void _loadSavedCredentials() async {
@@ -63,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
     await prefs.remove('remember_me');
   }
 
-  Future<void> _login() async {
+  Future<void> _login({bool isBiometricLogin = false}) async {
     await _saveOrClearCredentials();
 
     final email = _emailController.text.trim();
@@ -72,14 +114,72 @@ class _LoginScreenState extends State<LoginScreen> {
     final success = await _userStore.loginAndFetchAndSetUser(email, password);
 
     if (success && mounted) {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_userStore.errorMessage ?? 'Erro ao fazer login.'),
-        ),
+      if (!isBiometricLogin &&
+          _isBiometricAvailable &&
+          _biometricPreference == BiometricPreference.notChoosen) {
+        await _promptEnableBiometrics();
+      } else {
+        CustomAlert.success(
+          context: context,
+          message: 'Login realizado com sucesso!',
+        );
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      }
+    } else if (!success && mounted) {
+      CustomAlert.error(
+        context: context,
+        message: _userStore.errorMessage ?? 'E-mail ou senha incorretos.',
       );
     }
+  }
+
+  Future<void> _promptEnableBiometrics() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Login por Biometria'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                  'Deseja habilitar o login rápido com sua digital ou rosto?',
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Não'),
+              onPressed: () async {
+                await _secureStorageService.clearCredentials();
+                await _secureStorageService.setBiometricPreference(
+                  BiometricPreference.disabled,
+                );
+                await _secureStorageService.clearCredentials();
+                Navigator.of(context).pop();
+                Navigator.pushReplacementNamed(context, AppRoutes.home);
+              },
+            ),
+            TextButton(
+              child: const Text('Sim'),
+              onPressed: () async {
+                await _secureStorageService.setBiometricPreference(
+                  BiometricPreference.enabled,
+                );
+                await _secureStorageService.saveCredentials(
+                  _emailController.text.trim(),
+                  _passwordController.text.trim(),
+                );
+                Navigator.of(context).pop();
+                Navigator.pushReplacementNamed(context, AppRoutes.home);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -112,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 72,
                       height: 72,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withAlpha(3),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: const Icon(
@@ -248,23 +348,44 @@ class _LoginScreenState extends State<LoginScreen> {
                             right: 20,
                           ),
                           child: Observer(
-                            builder: (_) => CustomButton(
-                              text: _userStore.isLoading
-                                  ? 'Entrando...'
-                                  : 'Entrar',
-                              isEnabled:
+                            builder: (context) {
+                              final isLoading = _userStore.isLoading;
+                              final hasText =
                                   _emailController.text.isNotEmpty &&
-                                      _passwordController.text.isNotEmpty
-                                  ? true
-                                  : false,
-                              gradientColors: [
-                                Utils.hexToColor(AppColors.redInitial),
-                                Utils.hexToColor(AppColors.redFinal),
-                              ],
-                              onPressed: () {
-                                _login();
-                              },
-                            ),
+                                  _passwordController.text.isNotEmpty;
+
+                              return Column(
+                                children: [
+                                  CustomButton(
+                                    text: isLoading ? 'Entrando...' : 'Entrar',
+                                    isEnabled: !isLoading && hasText,
+                                    gradientColors: [
+                                      Utils.hexToColor(AppColors.redInitial),
+                                      Utils.hexToColor(AppColors.redFinal),
+                                    ],
+                                    onPressed: () => _login(),
+                                  ),
+
+                                  if (_isBiometricAvailable &&
+                                      _biometricPreference ==
+                                          BiometricPreference.enabled)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 16.0),
+                                      child: IconButton(
+                                        icon: Icon(
+                                          Icons.fingerprint,
+                                          size: 48,
+                                          color: Utils.hexToColor(
+                                            AppColors.primaryColor,
+                                          ),
+                                        ),
+                                        onPressed: _authenticateWithBiometrics,
+                                        tooltip: 'Entrar com biometria',
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
                           ),
                         ),
                       ],

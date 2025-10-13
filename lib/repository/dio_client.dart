@@ -10,9 +10,9 @@ class DioClient {
   DioClient(this._dio, GlobalKey<NavigatorState> navigatorKey) {
     _dio
       ..options.baseUrl = dotenv.env['BASE_URL']!
-      ..options.connectTimeout = const Duration(seconds: 30)
-      ..options.receiveTimeout = const Duration(seconds: 30)
-      ..options.sendTimeout = const Duration(seconds: 30)
+      ..options.connectTimeout = const Duration(seconds: 20)
+      ..options.receiveTimeout = const Duration(seconds: 20)
+      ..options.sendTimeout = const Duration(seconds: 20)
       ..options.headers = {
         'Content-Type': 'application/json; charset=UTF-8',
         'Accept': 'application/json',
@@ -20,6 +20,20 @@ class DioClient {
 
     _dio.interceptors.add(
       AuthInterceptor(dio: _dio, navigatorKey: navigatorKey),
+    );
+
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onError: (error, handler) {
+          debugPrint('=== INTERCEPTOR ON ERROR ===');
+          debugPrint('Error type: ${error.type}');
+          debugPrint('Error message: ${error.message}');
+          debugPrint('Error response: ${error.response}');
+          debugPrint('Error status code: ${error.response?.statusCode}');
+          debugPrint('==========================');
+          return handler.next(error);
+        },
+      ),
     );
 
     if (kDebugMode) {
@@ -55,7 +69,7 @@ class DioClient {
     } on DioException catch (e) {
       throw _handleError(e);
     } catch (e) {
-      throw 'Ocorreu um erro inesperado: $e';
+      throw Exception('Ocorreu um erro inesperado: $e');
     }
   }
 
@@ -65,7 +79,7 @@ class DioClient {
     } on DioException catch (e) {
       throw _handleError(e);
     } catch (e) {
-      throw 'Ocorreu um erro inesperado: $e';
+      throw Exception('Ocorreu um erro inesperado: $e');
     }
   }
 
@@ -75,7 +89,7 @@ class DioClient {
     } on DioException catch (e) {
       throw _handleError(e);
     } catch (e) {
-      throw 'Ocorreu um erro inesperado: $e';
+      throw Exception('Ocorreu um erro inesperado: $e');
     }
   }
 
@@ -85,7 +99,7 @@ class DioClient {
     } on DioException catch (e) {
       throw _handleError(e);
     } catch (e) {
-      throw 'Ocorreu um erro inesperado: $e';
+      throw Exception('Ocorreu um erro inesperado: $e');
     }
   }
 
@@ -95,11 +109,11 @@ class DioClient {
     } on DioException catch (e) {
       throw _handleError(e);
     } catch (e) {
-      throw 'Ocorreu um erro inesperado: $e';
+      throw Exception('Ocorreu um erro inesperado: $e');
     }
   }
 
-  String _handleError(DioException error) {
+  Exception _handleError(DioException error) {
     String errorMessage;
     switch (error.type) {
       case DioExceptionType.cancel:
@@ -139,6 +153,6 @@ class DioClient {
         errorMessage = 'Ocorreu um erro inesperado.';
         break;
     }
-    return errorMessage;
+    return Exception(errorMessage);
   }
 }

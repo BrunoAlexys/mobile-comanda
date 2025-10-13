@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:get_it/get_it.dart';
 import 'package:mobile_comanda/core/app_routes.dart';
 import 'package:mobile_comanda/core/locator.dart';
-import 'package:mobile_comanda/screen/login_screen.dart';
-import 'package:mobile_comanda/service/auth_service.dart';
+
+import 'package:mobile_comanda/service/secure_storage_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -13,8 +12,8 @@ void main() async {
   await dotenv.load(fileName: ".env");
   setupLocator(navigatorKey);
 
-  final authService = GetIt.I<AuthService>();
-  final token = await authService.getAccessToken();
+  final secureStorageService = locator<SecureStorageService>();
+  final token = await secureStorageService.getAccessToken();
   final initialRoute = (token != null) ? AppRoutes.home : AppRoutes.login;
   runApp(MyApp(initialRoute: initialRoute));
 }
@@ -31,8 +30,7 @@ class MyApp extends StatelessWidget {
       title: 'Comanda Online',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      //initialRoute: initialRoute,
-      home: LoginScreen(),
+      initialRoute: initialRoute,
       onGenerateRoute: AppRoutes.generateRoute,
     );
   }

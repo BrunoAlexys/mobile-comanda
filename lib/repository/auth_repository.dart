@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:mobile_comanda/repository/dio_client.dart';
 
 class AuthRepository {
@@ -7,10 +8,12 @@ class AuthRepository {
 
   Future<Map<String, String>> login(String email, String password) async {
     try {
+      debugPrint('Tentando login para o usuário: $email');
       final response = await _dioClient.post(
         '/auth/login',
         data: {'email': email, 'password': password},
       );
+      debugPrint('Resposta da API de login: ${response.data}');
 
       final responseData = response.data;
       if (responseData == null || responseData is! Map) {
@@ -28,6 +31,7 @@ class AuthRepository {
         );
       }
     } catch (e) {
+      debugPrint('Erro no login: $e');
       rethrow;
     }
   }

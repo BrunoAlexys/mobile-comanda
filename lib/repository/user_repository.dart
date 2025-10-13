@@ -12,7 +12,7 @@ class UserRepository {
       if (response.statusCode == 200 && response.data != null) {
         return response.data;
       } else {
-        throw 'Resposta inesperada do servidor';
+        throw Exception('Failed to load user data');
       }
     } catch (e) {
       rethrow;

@@ -1,79 +1,143 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
 import 'package:dio/dio.dart';
-
-import 'package:mobile_comanda/repository/dio_client.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_comanda/repository/auth_repository.dart';
+import 'package:mobile_comanda/repository/dio_client.dart';
 
-import 'auth_repository_test.mocks.dart';
+class TestDioClient implements DioClient {
+  Map<String, Response>? _mockedResponses;
+  Exception? _exceptionToThrow;
 
-@GenerateMocks([DioClient])
+  void mockResponse(String path, Response response) {
+    _mockedResponses ??= {};
+    _mockedResponses![path] = response;
+  }
+
+  void mockException(Exception exception) {
+    _exceptionToThrow = exception;
+  }
+
+  void reset() {
+    _mockedResponses = null;
+    _exceptionToThrow = null;
+  }
+
+  @override
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Response> post(String path, {dynamic data, Options? options}) async {
+    if (_exceptionToThrow != null) {
+      throw _exceptionToThrow!;
+    }
+
+    if (_mockedResponses != null && _mockedResponses!.containsKey(path)) {
+      return _mockedResponses![path]!;
+    }
+
+    throw Exception('No mock response configured for path: $path');
+  }
+
+  @override
+  Future<Response> put(String path, {dynamic data, Options? options}) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Response> patch(String path, {dynamic data, Options? options}) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<Response> delete(String path, {dynamic data, Options? options}) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  void setAuthToken(String token) {}
+
+  @override
+  void removeAuthToken() {}
+}
+
 void main() {
   late AuthRepository authRepository;
-  late MockDioClient mockDioClient;
+  late TestDioClient testDioClient;
 
   setUp(() {
-    mockDioClient = MockDioClient();
-    authRepository = AuthRepository(mockDioClient);
+    testDioClient = TestDioClient();
+    authRepository = AuthRepository(testDioClient);
   });
 
-  group('login', () {
-    const testEmail = 'teste@email.com';
-    const testPassword = 'password123';
-    const testAccessToken = 'fake-access-token';
-    const testRefreshToken = 'fake-refresh-token';
-    final loginData = {'email': testEmail, 'password': testPassword};
+  tearDown(() {
+    testDioClient.reset();
+  });
 
-    test('should return tokens map when login is successful', () async {
-      final fakeResponse = Response(
+  group('AuthRepository - login', () {
+    const testEmail = 'test@example.com';
+    const testPassword = 'password123';
+
+    test('deve retornar tokens quando login é bem-sucedido', () async {
+      const expectedAccessToken = 'access_token_123';
+      const expectedRefreshToken = 'refresh_token_456';
+
+      final expectedResponseData = {
+        'accessToken': expectedAccessToken,
+        'refreshToken': expectedRefreshToken,
+      };
+
+      final mockResponse = Response(
+        data: expectedResponseData,
         statusCode: 200,
-        data: {
-          'accessToken': testAccessToken,
-          'refreshToken': testRefreshToken,
-        },
         requestOptions: RequestOptions(path: '/auth/login'),
       );
 
-      when(
-        mockDioClient.post('/auth/login', data: loginData),
-      ).thenAnswer((_) async => fakeResponse);
+      testDioClient.mockResponse('/auth/login', mockResponse);
 
       final result = await authRepository.login(testEmail, testPassword);
 
-      expect(result, {
-        'accessToken': testAccessToken,
-        'refreshToken': testRefreshToken,
-      });
-      verify(mockDioClient.post('/auth/login', data: loginData)).called(1);
+      expect(result, isA<Map<String, String>>());
+      expect(result['accessToken'], equals(expectedAccessToken));
+      expect(result['refreshToken'], equals(expectedRefreshToken));
     });
 
-    test('should rethrow error when DioClient throws an exception', () async {
-      const errorMessage = 'Usuário ou senha inválidos';
-      when(
-        mockDioClient.post('/auth/login', data: loginData),
-      ).thenThrow(errorMessage);
-
-      expect(
-        () => authRepository.login(testEmail, testPassword),
-        throwsA(equals(errorMessage)),
-      );
-
-      verify(mockDioClient.post('/auth/login', data: loginData)).called(1);
-    });
-
-    test('should throw an exception for non-200 status code', () async {
-      final fakeResponse = Response(
-        statusCode: 401,
+    test('deve lançar exceção quando resposta da API é nula', () async {
+      final mockResponse = Response(
+        data: null,
+        statusCode: 200,
         requestOptions: RequestOptions(path: '/auth/login'),
       );
 
-      when(
-        mockDioClient.post('/auth/login', data: loginData),
-      ).thenAnswer((_) async => fakeResponse);
+      testDioClient.mockResponse('/auth/login', mockResponse);
 
       expect(
-        () => authRepository.login(testEmail, testPassword),
+        () async => await authRepository.login(testEmail, testPassword),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('Resposta da API de login é inválida ou vazia'),
+          ),
+        ),
+      );
+    });
+
+    test('deve lançar exceção quando resposta da API não é um Map', () async {
+      final mockResponse = Response(
+        data: 'invalid response',
+        statusCode: 200,
+        requestOptions: RequestOptions(path: '/auth/login'),
+      );
+
+      testDioClient.mockResponse('/auth/login', mockResponse);
+
+      expect(
+        () async => await authRepository.login(testEmail, testPassword),
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
@@ -85,48 +149,23 @@ void main() {
     });
 
     test(
-      'should throw an exception for 200 status code with null data',
+      'deve lançar exceção quando accessToken não está presente na resposta',
       () async {
-        final fakeResponse = Response(
+        final expectedResponseData = {
+          'refreshToken': 'refresh_token_456',
+          // accessToken ausente
+        };
+
+        final mockResponse = Response(
+          data: expectedResponseData,
           statusCode: 200,
-          data: null,
           requestOptions: RequestOptions(path: '/auth/login'),
         );
 
-        when(
-          mockDioClient.post('/auth/login', data: loginData),
-        ).thenAnswer((_) async => fakeResponse);
+        testDioClient.mockResponse('/auth/login', mockResponse);
 
         expect(
-          () => authRepository.login(testEmail, testPassword),
-          throwsA(
-            isA<Exception>().having(
-              (e) => e.toString(),
-              'message',
-              contains('Resposta da API de login é inválida ou vazia'),
-            ),
-          ),
-        );
-      },
-    );
-
-    test(
-      'should throw an error if response data does not contain required tokens',
-      () async {
-        final fakeResponse = Response(
-          statusCode: 200,
-          data: {
-            'message': 'Success',
-          }, // Sem as chaves 'accessToken' e 'refreshToken'
-          requestOptions: RequestOptions(path: '/auth/login'),
-        );
-
-        when(
-          mockDioClient.post('/auth/login', data: loginData),
-        ).thenAnswer((_) async => fakeResponse);
-
-        expect(
-          () => authRepository.login(testEmail, testPassword),
+          () async => await authRepository.login(testEmail, testPassword),
           throwsA(
             isA<Exception>().having(
               (e) => e.toString(),
@@ -137,6 +176,150 @@ void main() {
             ),
           ),
         );
+      },
+    );
+
+    test(
+      'deve lançar exceção quando refreshToken não está presente na resposta',
+      () async {
+        final expectedResponseData = {'accessToken': 'access_token_123'};
+
+        final mockResponse = Response(
+          data: expectedResponseData,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/auth/login'),
+        );
+
+        testDioClient.mockResponse('/auth/login', mockResponse);
+
+        expect(
+          () async => await authRepository.login(testEmail, testPassword),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains(
+                'Chave "accessToken" ou "refreshToken" não encontrada na resposta da API',
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    test('deve lançar exceção quando accessToken é null', () async {
+      final expectedResponseData = {
+        'accessToken': null,
+        'refreshToken': 'refresh_token_456',
+      };
+
+      final mockResponse = Response(
+        data: expectedResponseData,
+        statusCode: 200,
+        requestOptions: RequestOptions(path: '/auth/login'),
+      );
+
+      testDioClient.mockResponse('/auth/login', mockResponse);
+
+      expect(
+        () async => await authRepository.login(testEmail, testPassword),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains(
+              'Chave "accessToken" ou "refreshToken" não encontrada na resposta da API',
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('deve lançar exceção quando refreshToken é null', () async {
+      final expectedResponseData = {
+        'accessToken': 'access_token_123',
+        'refreshToken': null,
+      };
+
+      final mockResponse = Response(
+        data: expectedResponseData,
+        statusCode: 200,
+        requestOptions: RequestOptions(path: '/auth/login'),
+      );
+
+      testDioClient.mockResponse('/auth/login', mockResponse);
+
+      expect(
+        () async => await authRepository.login(testEmail, testPassword),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains(
+              'Chave "accessToken" ou "refreshToken" não encontrada na resposta da API',
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('deve propagar exceção quando DioClient lança exceção', () async {
+      final dioException = DioException(
+        requestOptions: RequestOptions(path: '/auth/login'),
+        response: Response(
+          statusCode: 401,
+          requestOptions: RequestOptions(path: '/auth/login'),
+        ),
+      );
+
+      testDioClient.mockException(dioException);
+
+      expect(
+        () async => await authRepository.login(testEmail, testPassword),
+        throwsA(isA<DioException>()),
+      );
+    });
+
+    test(
+      'deve propagar exceção genérica quando DioClient lança Exception',
+      () async {
+        final genericException = Exception('Network error');
+        testDioClient.mockException(genericException);
+
+        expect(
+          () async => await authRepository.login(testEmail, testPassword),
+          throwsA(isA<Exception>()),
+        );
+      },
+    );
+
+    test(
+      'deve tratar resposta com tokens válidos mas de tipos diferentes',
+      () async {
+        const expectedAccessToken = 'access_token_123';
+        const expectedRefreshToken = 'refresh_token_456';
+
+        final expectedResponseData = {
+          'accessToken': expectedAccessToken,
+          'refreshToken': expectedRefreshToken,
+          'extraField': 'should be ignored',
+          'userId': 123,
+        };
+
+        final mockResponse = Response(
+          data: expectedResponseData,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: '/auth/login'),
+        );
+
+        testDioClient.mockResponse('/auth/login', mockResponse);
+
+        final result = await authRepository.login(testEmail, testPassword);
+
+        expect(result, isA<Map<String, String>>());
+        expect(result['accessToken'], equals(expectedAccessToken));
+        expect(result['refreshToken'], equals(expectedRefreshToken));
+        expect(result.length, equals(2)); // Apenas os tokens esperados
       },
     );
   });

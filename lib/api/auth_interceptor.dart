@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
-import 'package:get_it/get_it.dart';
 import 'package:mobile_comanda/core/app_routes.dart';
-import 'package:mobile_comanda/service/auth_service.dart';
+import 'package:mobile_comanda/core/locator.dart';
+import 'package:mobile_comanda/service/secure_storage_service.dart';
 
 class AuthInterceptor extends QueuedInterceptor {
   final Dio dio;
@@ -15,10 +15,12 @@ class AuthInterceptor extends QueuedInterceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final authService = GetIt.I<AuthService>();
-    final accessToken = await authService.getAccessToken();
-    if (accessToken != null) {
-      options.headers['Authorization'] = 'Bearer $accessToken';
+    if (!_isAuthEndpoint(options.path)) {
+      final secureStorageService = locator<SecureStorageService>();
+      final accessToken = await secureStorageService.getAccessToken();
+      if (accessToken != null) {
+        options.headers['Authorization'] = 'Bearer $accessToken';
+      }
     }
 
     handler.next(options);
@@ -26,15 +28,17 @@ class AuthInterceptor extends QueuedInterceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401) {
-      final refreshToken = await GetIt.I<AuthService>().getRefreshToken();
+    if (err.response?.statusCode == 401 &&
+        !_isAuthEndpoint(err.requestOptions.path)) {
+      final secureStorageService = locator<SecureStorageService>();
+      final refreshToken = await secureStorageService.getRefreshToken();
       if (refreshToken == null) {
         return handler.next(err);
       }
 
       try {
         final newToken = await _refreshToken(refreshToken);
-        await GetIt.I<AuthService>().saveTokens(
+        await secureStorageService.saveTokens(
           accessToken: newToken['accessToken']!,
           refreshToken: newToken['refreshToken']!,
         );
@@ -45,7 +49,7 @@ class AuthInterceptor extends QueuedInterceptor {
         final response = await dio.fetch(err.requestOptions);
         return handler.resolve(response);
       } catch (e) {
-        await GetIt.I<AuthService>().clearTokens();
+        await secureStorageService.clearTokens();
         navigatorKey.currentState?.pushNamedAndRemoveUntil(
           AppRoutes.login,
           (route) => false,
@@ -86,5 +90,15 @@ class AuthInterceptor extends QueuedInterceptor {
         response: response,
       );
     }
+  }
+
+  bool _isAuthEndpoint(String path) {
+    final authEndpoints = ['/auth/login'];
+
+    final isAuthEndpoint = authEndpoints.any(
+      (endpoint) => path.contains(endpoint),
+    );
+
+    return isAuthEndpoint;
   }
 }
