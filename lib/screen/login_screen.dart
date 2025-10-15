@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:get_it/get_it.dart';
 import 'package:mobile_comanda/core/app_routes.dart';
 import 'package:mobile_comanda/core/locator.dart';
 import 'package:mobile_comanda/enum/biometric_preference.dart';
@@ -51,13 +50,14 @@ class _LoginScreenState extends State<LoginScreen> {
     _isBiometricAvailable = await _biometricService.isBiometricAvailable();
     _biometricPreference = await _secureStorageService.getBiometricPreference();
 
-    if (_isBiometricAvailable &&
-        _biometricPreference == BiometricPreference.enabled &&
-        mounted) {
-      await _authenticateWithBiometrics();
-    }
+    if (!mounted) return;
 
     setState(() {});
+
+    if (_isBiometricAvailable &&
+        _biometricPreference == BiometricPreference.enabled) {
+      await _authenticateWithBiometrics();
+    }
   }
 
   Future<void> _authenticateWithBiometrics() async {
@@ -65,7 +65,9 @@ class _LoginScreenState extends State<LoginScreen> {
       localizedReason: 'Faça login com sua digital ou reconhecimento facial',
     );
 
-    if (isAuthenticated && mounted) {
+    if (!mounted) return;
+
+    if (isAuthenticated) {
       final credentials = await _secureStorageService.getCredentials();
       final email = credentials['email'];
       final password = credentials['password'];
@@ -82,6 +84,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final prefs = await SharedPreferences.getInstance();
     final String? email = prefs.getString('saved_email');
     final bool? rememberMe = prefs.getBool('remember_me');
+
+    if (!mounted) return;
 
     if (rememberMe == true && email != null) {
       setState(() {
@@ -113,7 +117,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final success = await _userStore.loginAndFetchAndSetUser(email, password);
 
-    if (success && mounted) {
+    if (!mounted) return;
+
+    if (success) {
       if (!isBiometricLogin &&
           _isBiometricAvailable &&
           _biometricPreference == BiometricPreference.notChoosen) {
@@ -125,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         Navigator.pushReplacementNamed(context, AppRoutes.home);
       }
-    } else if (!success && mounted) {
+    } else {
       CustomAlert.error(
         context: context,
         message: _userStore.errorMessage ?? 'E-mail ou senha incorretos.',
@@ -158,6 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   BiometricPreference.disabled,
                 );
                 await _secureStorageService.clearCredentials();
+                if (!mounted) return;
                 Navigator.of(context).pop();
                 Navigator.pushReplacementNamed(context, AppRoutes.home);
               },
@@ -172,6 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   _emailController.text.trim(),
                   _passwordController.text.trim(),
                 );
+                if (!mounted) return;
                 Navigator.of(context).pop();
                 Navigator.pushReplacementNamed(context, AppRoutes.home);
               },
