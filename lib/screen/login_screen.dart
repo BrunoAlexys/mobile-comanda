@@ -110,6 +110,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login({bool isBiometricLogin = false}) async {
+    // Guardar o context atual antes de operações assíncronas
+    final currentContext = context;
+
     await _saveOrClearCredentials();
 
     final email = _emailController.text.trim();
@@ -117,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final success = await _userStore.loginAndFetchAndSetUser(email, password);
 
-    if (!mounted) return;
+    if (!currentContext.mounted) return;
 
     if (success) {
       if (!isBiometricLogin &&
@@ -126,52 +129,55 @@ class _LoginScreenState extends State<LoginScreen> {
         await _promptEnableBiometrics();
       } else {
         CustomAlert.success(
-          context: context,
+          context: currentContext,
           message: 'Login realizado com sucesso!',
         );
-        Navigator.pushReplacementNamed(context, AppRoutes.home);
+        Navigator.of(currentContext).pushReplacementNamed(AppRoutes.home);
       }
     } else {
       CustomAlert.error(
-        context: context,
+        context: currentContext,
         message: _userStore.errorMessage ?? 'E-mail ou senha incorretos.',
       );
     }
   }
 
   Future<void> _promptEnableBiometrics() async {
+    final currentContext = context;
+
+    if (!currentContext.mounted) return;
+
     return showDialog<void>(
-      context: context,
+      context: currentContext,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Login por Biometria'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(
-                  'Deseja habilitar o login rápido com sua digital ou rosto?',
-                ),
-              ],
-            ),
+          content: const Text(
+            'Deseja habilitar o login rápido com sua digital ou rosto?',
           ),
           actions: <Widget>[
             TextButton(
               child: const Text('Não'),
               onPressed: () async {
-                await _secureStorageService.clearCredentials();
+                final navigator = Navigator.of(dialogContext);
                 await _secureStorageService.setBiometricPreference(
                   BiometricPreference.disabled,
                 );
                 await _secureStorageService.clearCredentials();
-                if (!mounted) return;
-                Navigator.of(context).pop();
-                Navigator.pushReplacementNamed(context, AppRoutes.home);
+
+                if (!currentContext.mounted) return;
+
+                navigator.pop();
+                Navigator.of(
+                  currentContext,
+                ).pushReplacementNamed(AppRoutes.home);
               },
             ),
             TextButton(
               child: const Text('Sim'),
               onPressed: () async {
+                final navigator = Navigator.of(dialogContext);
                 await _secureStorageService.setBiometricPreference(
                   BiometricPreference.enabled,
                 );
@@ -179,9 +185,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   _emailController.text.trim(),
                   _passwordController.text.trim(),
                 );
-                if (!mounted) return;
-                Navigator.of(context).pop();
-                Navigator.pushReplacementNamed(context, AppRoutes.home);
+
+                if (!currentContext.mounted) return;
+
+                navigator.pop();
+                Navigator.of(
+                  currentContext,
+                ).pushReplacementNamed(AppRoutes.home);
               },
             ),
           ],
