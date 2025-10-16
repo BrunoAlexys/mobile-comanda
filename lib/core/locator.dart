@@ -37,7 +37,7 @@ void setupLocator(GlobalKey<NavigatorState> navigatorKey) {
   );
 
   locator.registerLazySingleton<SecureStorageService>(
-    () => SecureStorageService(),
+    () => SecureStorageService(locator<FlutterSecureStorage>()),
   );
 
   locator.registerLazySingleton<AuthService>(
@@ -54,6 +54,7 @@ void setupLocator(GlobalKey<NavigatorState> navigatorKey) {
     () => BiometricService(locator<LocalAuthentication>()),
   );
 
+  // ## STORES (CONTROLE DE ESTADO) ##
   locator.registerLazySingleton<UserStore>(
     () => UserStore(locator<UserService>(), locator<AuthService>()),
   );

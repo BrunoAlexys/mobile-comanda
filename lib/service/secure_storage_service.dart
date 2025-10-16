@@ -3,7 +3,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mobile_comanda/enum/biometric_preference.dart';
 
 class SecureStorageService {
-  final _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage;
+
+  SecureStorageService(this._storage);
 
   static const _keyAccessToken = 'access_token';
   static const _keyRefreshToken = 'refresh_token';

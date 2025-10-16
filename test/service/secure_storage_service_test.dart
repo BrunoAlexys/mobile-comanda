@@ -1,46 +1,73 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_comanda/enum/biometric_preference.dart';
 import 'package:mobile_comanda/service/secure_storage_service.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
+
+@GenerateMocks([FlutterSecureStorage])
+import 'secure_storage_service_test.mocks.dart';
 
 void main() {
   late SecureStorageService secureStorageService;
-
-  setUpAll(() {
-    // Inicializar bindings do Flutter necessários para FlutterSecureStorage
-    TestWidgetsFlutterBinding.ensureInitialized();
-  });
+  late MockFlutterSecureStorage mockFlutterSecureStorage;
 
   setUp(() {
-    secureStorageService = SecureStorageService();
+    mockFlutterSecureStorage = MockFlutterSecureStorage();
+    secureStorageService = SecureStorageService(mockFlutterSecureStorage);
   });
 
-  // NOTA: Estes testes focam no comportamento de tratamento de exceções
-  // do SecureStorageService. Em ambiente de teste unitário, o FlutterSecureStorage
-  // não tem implementação nativa, então todas as operações falharão com MissingPluginException.
-  // Isso permite testar se o serviço lida adequadamente com falhas de storage.
-
-  group('SecureStorageService - Tokens - Error Handling', () {
+  group('SecureStorageService - Tokens', () {
     const testAccessToken = 'access_token_123';
     const testRefreshToken = 'refresh_token_456';
 
-    test('deve lidar com exceções ao salvar tokens sem falhar', () async {
-      // Act & Assert - não deve lançar exceção
-      expect(
-        () async => await secureStorageService.saveTokens(
-          accessToken: testAccessToken,
-          refreshToken: testRefreshToken,
+    test('deve salvar e retornar tokens com sucesso', () async {
+      when(
+        mockFlutterSecureStorage.write(
+          key: anyNamed('key'),
+          value: anyNamed('value'),
         ),
-        returnsNormally,
+      ).thenAnswer((_) async {});
+
+      when(
+        mockFlutterSecureStorage.read(key: 'access_token'),
+      ).thenAnswer((_) async => testAccessToken);
+      when(
+        mockFlutterSecureStorage.read(key: 'refresh_token'),
+      ).thenAnswer((_) async => testRefreshToken);
+
+      await secureStorageService.saveTokens(
+        accessToken: testAccessToken,
+        refreshToken: testRefreshToken,
       );
+      final accessToken = await secureStorageService.getAccessToken();
+      final refreshToken = await secureStorageService.getRefreshToken();
+
+      expect(accessToken, testAccessToken);
+      expect(refreshToken, testRefreshToken);
+      verify(
+        mockFlutterSecureStorage.write(
+          key: 'access_token',
+          value: testAccessToken,
+        ),
+      ).called(1);
+      verify(
+        mockFlutterSecureStorage.write(
+          key: 'refresh_token',
+          value: testRefreshToken,
+        ),
+      ).called(1);
     });
 
     test(
       'deve retornar null quando há exceção na leitura de access token',
       () async {
-        // Act
+        when(
+          mockFlutterSecureStorage.read(key: 'access_token'),
+        ).thenThrow(Exception('Storage error'));
+
         final result = await secureStorageService.getAccessToken();
 
-        // Assert
         expect(result, isNull);
       },
     );
@@ -48,310 +75,189 @@ void main() {
     test(
       'deve retornar null quando há exceção na leitura de refresh token',
       () async {
-        // Act
+        when(
+          mockFlutterSecureStorage.read(key: 'refresh_token'),
+        ).thenThrow(Exception('Storage error'));
+
         final result = await secureStorageService.getRefreshToken();
 
-        // Assert
         expect(result, isNull);
       },
     );
 
-    test('deve lidar com exceções ao limpar tokens sem falhar', () async {
-      // Act & Assert - não deve lançar exceção
-      expect(
-        () async => await secureStorageService.clearTokens(),
-        returnsNormally,
-      );
+    test('deve executar clearTokens mesmo com exceções', () async {
+      // Configura para lançar exceção em ambas as chamadas
+      when(
+        mockFlutterSecureStorage.delete(key: 'access_token'),
+      ).thenThrow(Exception('Storage error'));
+      when(
+        mockFlutterSecureStorage.delete(key: 'refresh_token'),
+      ).thenThrow(Exception('Storage error'));
+
+      // Deve executar sem lançar exceção
+      await secureStorageService.clearTokens();
     });
 
-    test('deve aceitar diferentes tipos de tokens sem validação', () async {
-      // Teste com diferentes valores
-      const emptyToken = '';
-      final longToken = 'a' * 1000;
-      const specialCharsToken = 'token!@#\$%^&*()_+{}[]|\\:";\'<>?,.~/`';
+    test('deve executar clearTokens quando apenas access_token falha', () async {
+      // Configura access_token para lançar exceção e refresh_token para funcionar
+      when(
+        mockFlutterSecureStorage.delete(key: 'access_token'),
+      ).thenThrow(Exception('Storage error'));
+      when(
+        mockFlutterSecureStorage.delete(key: 'refresh_token'),
+      ).thenAnswer((_) async {});
 
-      // Act & Assert - todos devem executar sem exceção
-      expect(
-        () async => await secureStorageService.saveTokens(
-          accessToken: emptyToken,
-          refreshToken: emptyToken,
-        ),
-        returnsNormally,
-      );
-
-      expect(
-        () async => await secureStorageService.saveTokens(
-          accessToken: longToken,
-          refreshToken: longToken,
-        ),
-        returnsNormally,
-      );
-
-      expect(
-        () async => await secureStorageService.saveTokens(
-          accessToken: specialCharsToken,
-          refreshToken: specialCharsToken,
-        ),
-        returnsNormally,
-      );
+      // Deve executar sem lançar exceção
+      await secureStorageService.clearTokens();
     });
   });
 
-  group('SecureStorageService - Credentials - Error Handling', () {
+  group('SecureStorageService - Credentials', () {
     const testEmail = 'test@example.com';
     const testPassword = 'password123';
 
-    test('deve lidar com exceções ao salvar credenciais sem falhar', () async {
-      expect(
-        () async =>
-            await secureStorageService.saveCredentials(testEmail, testPassword),
-        returnsNormally,
-      );
+    test('deve salvar e retornar credenciais com sucesso', () async {
+      when(
+        mockFlutterSecureStorage.write(
+          key: anyNamed('key'),
+          value: anyNamed('value'),
+        ),
+      ).thenAnswer((_) async {});
+
+      when(
+        mockFlutterSecureStorage.read(key: 'biometric_email'),
+      ).thenAnswer((_) async => testEmail);
+      when(
+        mockFlutterSecureStorage.read(key: 'biometric_password'),
+      ).thenAnswer((_) async => testPassword);
+
+      await secureStorageService.saveCredentials(testEmail, testPassword);
+      final result = await secureStorageService.getCredentials();
+
+      expect(result['email'], testEmail);
+      expect(result['password'], testPassword);
+      verify(
+        mockFlutterSecureStorage.write(
+          key: 'biometric_email',
+          value: testEmail,
+        ),
+      ).called(1);
+      verify(
+        mockFlutterSecureStorage.write(
+          key: 'biometric_password',
+          value: testPassword,
+        ),
+      ).called(1);
     });
 
     test(
       'deve retornar credenciais nulas quando há exceção na leitura',
       () async {
+        when(
+          mockFlutterSecureStorage.read(key: 'biometric_email'),
+        ).thenThrow(Exception('Storage error'));
+        when(
+          mockFlutterSecureStorage.read(key: 'biometric_password'),
+        ).thenThrow(Exception('Storage error'));
+
         final credentials = await secureStorageService.getCredentials();
 
         expect(credentials['email'], isNull);
         expect(credentials['password'], isNull);
-        expect(credentials, isA<Map<String, String?>>());
-        expect(credentials.containsKey('email'), isTrue);
-        expect(credentials.containsKey('password'), isTrue);
-      },
-    );
-
-    test('deve lidar com exceções ao limpar credenciais sem falhar', () async {
-      expect(
-        () async => await secureStorageService.clearCredentials(),
-        returnsNormally,
-      );
-    });
-
-    test(
-      'deve aceitar diferentes tipos de credenciais sem validação',
-      () async {
-        const emptyEmail = '';
-        const emptyPassword = '';
-        const specialEmail = 'test+special@domain.co.uk';
-        const specialPassword = 'P@ssw0rd!@#\$%^&*()_+{}[]|\\:";\'<>?,.~/`';
-        final longEmail =
-            'very.long.email.address@very.long.domain.name.example.com';
-        final longPassword = 'a' * 500;
-
-        expect(
-          () async => await secureStorageService.saveCredentials(
-            emptyEmail,
-            emptyPassword,
-          ),
-          returnsNormally,
-        );
-
-        expect(
-          () async => await secureStorageService.saveCredentials(
-            specialEmail,
-            specialPassword,
-          ),
-          returnsNormally,
-        );
-
-        expect(
-          () async => await secureStorageService.saveCredentials(
-            longEmail,
-            longPassword,
-          ),
-          returnsNormally,
-        );
       },
     );
   });
 
-  group('SecureStorageService - Biometric Preference - Error Handling', () {
+  group('SecureStorageService - Biometric Preference', () {
     test(
-      'deve lidar com exceções ao salvar preferência biométrica sem falhar',
+      'deve salvar e retornar a preferência biométrica com sucesso',
       () async {
-        for (final preference in BiometricPreference.values) {
-          expect(
-            () async =>
-                await secureStorageService.setBiometricPreference(preference),
-            returnsNormally,
-          );
-        }
+        when(
+          mockFlutterSecureStorage.write(
+            key: 'biometric_preference',
+            value: BiometricPreference.enabled.name,
+          ),
+        ).thenAnswer((_) async {});
+
+        when(
+          mockFlutterSecureStorage.read(key: 'biometric_preference'),
+        ).thenAnswer((_) async => BiometricPreference.enabled.name);
+
+        await secureStorageService.setBiometricPreference(
+          BiometricPreference.enabled,
+        );
+        final result = await secureStorageService.getBiometricPreference();
+
+        expect(result, BiometricPreference.enabled);
+        verify(
+          mockFlutterSecureStorage.write(
+            key: 'biometric_preference',
+            value: BiometricPreference.enabled.name,
+          ),
+        ).called(1);
       },
     );
+
+    test('deve retornar notChoosen quando valor salvo é inválido', () async {
+      when(
+        mockFlutterSecureStorage.read(key: 'biometric_preference'),
+      ).thenAnswer((_) async => 'invalid_value');
+
+      final result = await secureStorageService.getBiometricPreference();
+
+      expect(result, BiometricPreference.notChoosen);
+    });
 
     test(
       'deve retornar notChoosen como padrão quando há exceção na leitura',
       () async {
+        when(
+          mockFlutterSecureStorage.read(key: 'biometric_preference'),
+        ).thenThrow(Exception('Storage error'));
+
         final preference = await secureStorageService.getBiometricPreference();
 
-        expect(preference, equals(BiometricPreference.notChoosen));
+        expect(preference, BiometricPreference.notChoosen);
+      },
+    );
+
+    test(
+      'isBiometricEnabled deve retornar true quando a preferência é enabled',
+      () async {
+        when(
+          mockFlutterSecureStorage.read(key: 'biometric_preference'),
+        ).thenAnswer((_) async => BiometricPreference.enabled.name);
+
+        final isEnabled = await secureStorageService.isBiometricEnabled();
+
+        expect(isEnabled, isTrue);
+      },
+    );
+
+    test(
+      'isBiometricEnabled deve retornar false quando a preferência não é enabled',
+      () async {
+        when(
+          mockFlutterSecureStorage.read(key: 'biometric_preference'),
+        ).thenAnswer((_) async => BiometricPreference.disabled.name);
+
+        final isEnabled = await secureStorageService.isBiometricEnabled();
+
+        expect(isEnabled, isFalse);
       },
     );
 
     test(
       'deve retornar false quando há exceção em isBiometricEnabled',
       () async {
+        when(
+          mockFlutterSecureStorage.read(key: 'biometric_preference'),
+        ).thenThrow(Exception('Storage error'));
+
         final isEnabled = await secureStorageService.isBiometricEnabled();
 
         expect(isEnabled, isFalse);
       },
     );
-
-    test(
-      'deve manter consistência entre getBiometricPreference e isBiometricEnabled com exceções',
-      () async {
-        final preference = await secureStorageService.getBiometricPreference();
-        final isEnabled = await secureStorageService.isBiometricEnabled();
-
-        expect(preference, equals(BiometricPreference.notChoosen));
-        expect(isEnabled, isFalse);
-      },
-    );
-
-    test('deve validar todos os valores do enum BiometricPreference', () async {
-      for (final preference in BiometricPreference.values) {
-        expect(
-          () async =>
-              await secureStorageService.setBiometricPreference(preference),
-          returnsNormally,
-        );
-      }
-
-      expect(BiometricPreference.values, hasLength(3));
-      expect(BiometricPreference.values, contains(BiometricPreference.enabled));
-      expect(
-        BiometricPreference.values,
-        contains(BiometricPreference.disabled),
-      );
-      expect(
-        BiometricPreference.values,
-        contains(BiometricPreference.notChoosen),
-      );
-    });
-  });
-
-  group('SecureStorageService - Integration Tests', () {
-    test('deve executar todas as operações sem lançar exceções', () async {
-      const accessToken = 'access_123';
-      const refreshToken = 'refresh_456';
-      const email = 'test@example.com';
-      const password = 'password123';
-      const preference = BiometricPreference.enabled;
-
-      expect(() async {
-        await secureStorageService.saveTokens(
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-        );
-        await secureStorageService.getAccessToken();
-        await secureStorageService.getRefreshToken();
-        await secureStorageService.clearTokens();
-
-        await secureStorageService.saveCredentials(email, password);
-        await secureStorageService.getCredentials();
-        await secureStorageService.clearCredentials();
-
-        await secureStorageService.setBiometricPreference(preference);
-        await secureStorageService.getBiometricPreference();
-        await secureStorageService.isBiometricEnabled();
-      }, returnsNormally);
-    });
-
-    test(
-      'deve retornar valores padrão consistentes em caso de falha',
-      () async {
-        // Act
-        final accessToken = await secureStorageService.getAccessToken();
-        final refreshToken = await secureStorageService.getRefreshToken();
-        final credentials = await secureStorageService.getCredentials();
-        final preference = await secureStorageService.getBiometricPreference();
-        final isEnabled = await secureStorageService.isBiometricEnabled();
-
-        expect(accessToken, isNull);
-        expect(refreshToken, isNull);
-        expect(credentials['email'], isNull);
-        expect(credentials['password'], isNull);
-        expect(credentials, hasLength(2));
-        expect(preference, equals(BiometricPreference.notChoosen));
-        expect(isEnabled, isFalse);
-      },
-    );
-
-    test('deve permitir operações sequenciais sem interferência', () async {
-      expect(
-        () async => await secureStorageService.saveTokens(
-          accessToken: 'login_token',
-          refreshToken: 'login_refresh',
-        ),
-        returnsNormally,
-      );
-
-      expect(
-        () async => await secureStorageService.setBiometricPreference(
-          BiometricPreference.enabled,
-        ),
-        returnsNormally,
-      );
-
-      expect(
-        () async => await secureStorageService.saveCredentials(
-          'user@app.com',
-          'userpass',
-        ),
-        returnsNormally,
-      );
-
-      expect(
-        () async => await secureStorageService.saveTokens(
-          accessToken: 'new_token',
-          refreshToken: 'new_refresh',
-        ),
-        returnsNormally,
-      );
-
-      expect(
-        () async => await secureStorageService.clearTokens(),
-        returnsNormally,
-      );
-
-      expect(
-        () async => await secureStorageService.clearCredentials(),
-        returnsNormally,
-      );
-    });
-
-    test('deve manter interface consistente para todos os métodos', () async {
-      expect(
-        secureStorageService.saveTokens(accessToken: 'a', refreshToken: 'r'),
-        isA<Future<void>>(),
-      );
-      expect(secureStorageService.getAccessToken(), isA<Future<String?>>());
-      expect(secureStorageService.getRefreshToken(), isA<Future<String?>>());
-      expect(secureStorageService.clearTokens(), isA<Future<void>>());
-
-      expect(
-        secureStorageService.saveCredentials('email', 'password'),
-        isA<Future<void>>(),
-      );
-      expect(
-        secureStorageService.getCredentials(),
-        isA<Future<Map<String, String?>>>(),
-      );
-      expect(secureStorageService.clearCredentials(), isA<Future<void>>());
-
-      expect(
-        secureStorageService.setBiometricPreference(
-          BiometricPreference.enabled,
-        ),
-        isA<Future<void>>(),
-      );
-      expect(
-        secureStorageService.getBiometricPreference(),
-        isA<Future<BiometricPreference>>(),
-      );
-      expect(secureStorageService.isBiometricEnabled(), isA<Future<bool>>());
-    });
   });
 }

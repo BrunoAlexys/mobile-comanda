@@ -110,7 +110,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login({bool isBiometricLogin = false}) async {
-    // Guardar o context atual antes de operações assíncronas
     final currentContext = context;
 
     await _saveOrClearCredentials();
