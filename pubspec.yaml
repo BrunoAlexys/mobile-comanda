@@ -35,6 +35,18 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   mask_text_input_formatter: ^2.9.0
+  dio: ^5.9.0
+  get_it: ^8.2.0
+  mobx: ^2.5.0
+  flutter_mobx: ^2.3.0
+  flutter_secure_storage: ^9.2.4
+  flutter_dotenv: ^6.0.0
+  mobx_codegen: ^2.7.4
+  shared_preferences: ^2.5.3
+  mockito: ^5.5.1
+  local_auth: ^2.3.0
+  local_auth_android: ^1.0.55
+  local_auth_darwin: ^1.6.1
 
 dev_dependencies:
   flutter_test:
@@ -45,7 +57,8 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
+  build_runner: ^2.9.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -59,6 +72,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icons/
+    - .env
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

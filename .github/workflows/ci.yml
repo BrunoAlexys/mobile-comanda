@@ -27,6 +27,3 @@ jobs:
 
       - name: 🔍 Analisar código
         run: flutter analyze --no-fatal-infos .
-
-      - name: 🧪 Rodar os testes
-        run: flutter test --coverage

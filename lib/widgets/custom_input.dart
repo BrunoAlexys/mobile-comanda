@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_comanda/util/utils.dart';
 
-class CustomInput extends StatelessWidget {
+class CustomInput extends StatefulWidget {
   final TextEditingController? controller;
   final String? hintText;
   final String? labelText;
@@ -39,35 +39,62 @@ class CustomInput extends StatelessWidget {
   });
 
   @override
+  State<CustomInput> createState() => _CustomInputState();
+}
+
+class _CustomInputState extends State<CustomInput> {
+  late bool _isObscureText;
+
+  @override
+  void initState() {
+    super.initState();
+    _isObscureText = widget.obscureText;
+  }
+
+  void _toggleObscureText() {
+    setState(() {
+      _isObscureText = !_isObscureText;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      validator: validator,
-      textInputAction: textInputAction,
-      focusNode: focusNode,
-      onFieldSubmitted: onFieldSubmitted,
-      onChanged: onChanged,
+      controller: widget.controller,
+      obscureText: _isObscureText,
+      keyboardType: widget.keyboardType,
+      inputFormatters: widget.inputFormatters,
+      validator: widget.validator,
+      textInputAction: widget.textInputAction,
+      focusNode: widget.focusNode,
+      onFieldSubmitted: widget.onFieldSubmitted,
+      onChanged: widget.onChanged,
       decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
+        labelText: widget.labelText,
+        hintText: widget.hintText,
+        prefixIcon: widget.prefixIcon,
+        suffixIcon: widget.obscureText
+            ? IconButton(
+                icon: Icon(
+                  _isObscureText ? Icons.lock_outline : Icons.lock_open,
+                  color: Colors.grey,
+                ),
+                onPressed: _toggleObscureText,
+              )
+            : widget.suffixIcon,
         filled: true,
-        fillColor: fillColor ?? Utils.hexToColor('F9FAFB'),
+        fillColor: widget.fillColor ?? Utils.hexToColor('F9FAFB'),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6.0),
           borderSide: BorderSide(
-            color: borderColor ?? Utils.hexToColor('D9D9D9'),
+            color: widget.borderColor ?? Utils.hexToColor('D9D9D9'),
             width: 1.0,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6.0),
           borderSide: BorderSide(
-            color: borderColor ?? Utils.hexToColor('D9D9D9'),
+            color: widget.borderColor ?? Utils.hexToColor('D9D9D9'),
             width: 1.0,
           ),
         ),
