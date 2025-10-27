@@ -1,31 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_comanda/widgets/custom_input.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mobile_comanda/core/app_routes.dart';
+import 'package:mobile_comanda/core/locator.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'package:mobile_comanda/service/secure_storage_service.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+  setupLocator(navigatorKey);
+
+  final secureStorageService = locator<SecureStorageService>();
+  final token = await secureStorageService.getAccessToken();
+  final initialRoute = (token != null) ? AppRoutes.home : AppRoutes.login;
+  runApp(MyApp(initialRoute: initialRoute));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String initialRoute;
+
+  const MyApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Comanda Online',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      home: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: CustomInput(
-              hintText: 'Telefone',
-              keyboardType: TextInputType.phone,
-              suffixIcon: Icon(Icons.phone, color: Colors.grey),
-            ),
-          ),
-        ),
-      ),
+      initialRoute: initialRoute,
+      onGenerateRoute: AppRoutes.generateRoute,
     );
   }
 }
