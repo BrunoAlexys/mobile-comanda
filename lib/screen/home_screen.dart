@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_comanda/core/locator.dart';
-import 'package:mobile_comanda/store/user_store.mobx.dart';
 import 'package:mobile_comanda/util/constants.dart';
 import 'package:mobile_comanda/util/utils.dart';
 import 'package:mobile_comanda/widgets/custom_appbar.dart';
-import 'package:mobile_comanda/widgets/custom_button.dart';
 import 'package:mobile_comanda/widgets/custom_menu.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -12,8 +9,6 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _userStore = locator<UserStore>();
-
     return Scaffold(
       appBar: CustomAppBar(
         title: Column(
