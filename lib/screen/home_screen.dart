@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_comanda/core/app_routes.dart';
 import 'package:mobile_comanda/util/constants.dart';
 import 'package:mobile_comanda/util/utils.dart';
 import 'package:mobile_comanda/widgets/custom_appbar.dart';
@@ -10,6 +11,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: CustomAppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,13 +59,13 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _NewOrderCard extends StatelessWidget {
-  const _NewOrderCard({Key? key}) : super(key: key);
+  const _NewOrderCard({super.key});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        print('Fazer Novo Pedido Clicado!');
+        Navigator.pushNamed(context, AppRoutes.order);
       },
       borderRadius: const BorderRadius.all(Radius.circular(10)),
       child: Container(
@@ -79,6 +81,14 @@ class _NewOrderCard extends StatelessWidget {
             begin: Alignment.centerRight,
             end: Alignment.centerLeft,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.3),
+              spreadRadius: 2,
+              blurRadius: 5,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -138,11 +148,16 @@ class _PendingOrdersCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          border: Border.all(
-            color: Utils.hexToColor(AppColors.primaryColor),
-            width: 1.0,
-          ),
+          color: Colors.white,
           borderRadius: const BorderRadius.all(Radius.circular(10)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.3),
+              spreadRadius: 2,
+              blurRadius: 5,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -161,7 +176,7 @@ class _PendingOrdersCard extends StatelessWidget {
                       padding: const EdgeInsets.all(4.0),
                       child: Icon(
                         Icons.access_time_filled_rounded,
-                        color: Utils.hexToColor('7F1D1D'),
+                        color: Utils.hexToColor(AppColors.burgundy),
                         size: 40,
                       ),
                     ),
