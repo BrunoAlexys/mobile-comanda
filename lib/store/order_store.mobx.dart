@@ -139,6 +139,7 @@ extension OrderCopyWith on Order {
       finalTotalPrice: finalTotalPrice,
       createdAt: createdAt,
       status: status,
+      userId: userId,
     );
   }
 }

@@ -12,6 +12,7 @@ class Order {
   final double? finalTotalPrice;
   final DateTime? createdAt;
   final String? status;
+  final String userId;
 
   Order({
     this.id,
@@ -24,6 +25,7 @@ class Order {
     this.finalTotalPrice,
     this.createdAt,
     this.status,
+    required this.userId,
   });
 
   Map<String, dynamic> toJson() {
@@ -38,6 +40,7 @@ class Order {
       }).toList(),
 
       'appliedFeeIds': appliedFees?.map((fee) => fee.id).toList() ?? [],
+      'userId': userId,
     };
   }
 
@@ -61,6 +64,7 @@ class Order {
           ? DateTime.parse(json['createdAt'])
           : null,
       status: json['status'] ?? 'PENDING',
+      userId: json['userId'],
     );
   }
 }

@@ -34,6 +34,7 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
   int _currentLength = 0;
   bool _isInitializing = true;
   bool _isProcessing = false;
+  String? idString;
 
   @override
   void initState() {
@@ -52,8 +53,11 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
 
   Future<void> _loadInitFee() async {
     try {
-      final idString = await _userStore.getUserId();
-      final int? parsedId = int.tryParse(idString);
+      idString = await _userStore.getUserId();
+      int? parsedId;
+      if (idString != null) {
+        parsedId = int.tryParse(idString!);
+      }
 
       if (parsedId != null) {
         await _feeStore.fetchFeeByUser(parsedId);
@@ -133,7 +137,7 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
         totalOrderPrice: _orderStore.totalOrderPrice,
         totalFeesValue: _orderStore.totalFeesValue,
         finalTotalPrice: _orderStore.finalTotalPrice,
-        createdAt: DateTime.now(),
+        userId: idString!,
       );
 
       await Future.delayed(const Duration(milliseconds: 500));
@@ -267,6 +271,7 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
           totalOrderPrice: _orderStore.totalOrderPrice,
           totalFeesValue: _orderStore.totalFeesValue,
           finalTotalPrice: _orderStore.finalTotalPrice,
+          userId: idString!,
         );
 
         return Scaffold(
