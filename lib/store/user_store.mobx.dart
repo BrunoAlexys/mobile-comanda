@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_comanda/core/locator.dart';
 import 'package:mobile_comanda/model/user.dart';
 import 'package:mobile_comanda/service/auth_service.dart';
+import 'package:mobile_comanda/service/secure_storage_service.dart';
 import 'package:mobile_comanda/service/user_service.dart';
 import 'package:mobx/mobx.dart';
 
@@ -39,6 +41,10 @@ abstract class _UserStoreBase with Store {
 
     try {
       await _authService.login(email, password);
+
+      final secureStorage = locator<SecureStorageService>();
+      await secureStorage.saveEmail(email);
+
       debugPrint(
         '[UserStore] Autenticação via AuthService concluída. Buscando dados do usuário...',
       );
@@ -70,6 +76,30 @@ abstract class _UserStoreBase with Store {
   }
 
   @action
+  Future<void> loadCurrentUser() async {
+    if (user != null) return;
+
+    runInAction(() => isLoading = true);
+
+    try {
+      final secureStorage = locator<SecureStorageService>();
+      final email = await secureStorage.getEmail();
+
+      if (email != null && email.isNotEmpty) {
+        debugPrint('[UserStore] Recarregando usuário: $email');
+        final userData = await _userService.fetchUser(email);
+        runInAction(() {
+          user = User.fromJson(userData);
+        });
+      }
+    } catch (e) {
+      debugPrint('[UserStore] Erro ao recarregar usuário: $e');
+    } finally {
+      runInAction(() => isLoading = false);
+    }
+  }
+
+  @action
   Future<void> logout() async {
     debugPrint('[UserStore] Ação logout iniciada para: ${user?.email}');
     runInAction(() {
@@ -79,6 +109,10 @@ abstract class _UserStoreBase with Store {
 
     try {
       await _authService.logout();
+
+      final secureStorage = locator<SecureStorageService>();
+      await secureStorage.deleteEmail();
+
       runInAction(() {
         user = null;
         isLoading = false;

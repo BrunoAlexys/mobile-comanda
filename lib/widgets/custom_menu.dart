@@ -1,20 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_comanda/core/app_routes.dart';
 import 'package:mobile_comanda/util/utils.dart';
 
 class CustomMenu extends StatefulWidget {
-  const CustomMenu({super.key});
+  final int selectedIndex;
+
+  const CustomMenu({super.key, this.selectedIndex = 0});
 
   @override
   State<CustomMenu> createState() => _CustomMenuState();
 }
 
 class _CustomMenuState extends State<CustomMenu> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.selectedIndex;
+  }
 
   void _onItemTapped(int index) {
+    if (index == _selectedIndex) return;
+
     setState(() {
       _selectedIndex = index;
     });
+
+    final List<String> routes = [
+      AppRoutes.home,
+      AppRoutes.pedidos,
+      AppRoutes.profile,
+    ];
+
+    if (index < routes.length) {
+      Navigator.of(context).pushReplacementNamed(routes[index]);
+    }
   }
 
   @override
@@ -29,7 +50,7 @@ class _CustomMenuState extends State<CustomMenu> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),

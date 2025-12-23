@@ -12,6 +12,7 @@ class SecureStorageService {
   static const _keyEmail = 'biometric_email';
   static const _keyPassword = 'biometric_password';
   static const _keyBiometricPreference = 'biometric_preference';
+  static const _keyUserEmail = 'user_email';
 
   Future<void> saveTokens({
     required String accessToken,
@@ -80,6 +81,31 @@ class SecureStorageService {
       debugPrint('[SecureStorageService] Credenciais limpas com sucesso.');
     } catch (e) {
       debugPrint('[SecureStorageService] Falha ao limpar credenciais: $e');
+    }
+  }
+
+  Future<void> saveEmail(String email) async {
+    try {
+      await _storage.write(key: _keyUserEmail, value: email);
+    } catch (e) {
+      debugPrint('[SecureStorageService] Falha ao salvar email do usuário: $e');
+    }
+  }
+
+  Future<String?> getEmail() async {
+    try {
+      return await _storage.read(key: _keyUserEmail);
+    } catch (e) {
+      debugPrint('[SecureStorageService] Falha ao ler email do usuário: $e');
+      return null;
+    }
+  }
+
+  Future<void> deleteEmail() async {
+    try {
+      await _storage.delete(key: _keyUserEmail);
+    } catch (e) {
+      debugPrint('[SecureStorageService] Falha ao deletar email do usuário: $e');
     }
   }
 

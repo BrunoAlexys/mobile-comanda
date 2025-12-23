@@ -18,4 +18,15 @@ class UserRepository {
       rethrow;
     }
   }
+
+  Future<void> updatePassword(String oldPassword, String newPassword) async {
+    try {
+      await _dioClient.patch(
+        '/users/1/password',
+        data: {'currentPassword': oldPassword, 'newPassword': newPassword},
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
