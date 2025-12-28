@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_comanda/model/user.dart';
 import 'package:mobile_comanda/service/auth_service.dart';
+import 'package:mobile_comanda/service/secure_storage_service.dart';
 import 'package:mobile_comanda/service/user_service.dart';
 import 'package:mobx/mobx.dart';
 
@@ -12,8 +13,13 @@ class UserStore = _UserStoreBase with _$UserStore;
 abstract class _UserStoreBase with Store {
   final UserService _userService;
   final AuthService _authService;
+  final SecureStorageService _secureStorageService;
 
-  _UserStoreBase(this._userService, this._authService);
+  _UserStoreBase(
+    this._userService,
+    this._authService,
+    this._secureStorageService,
+  );
 
   @observable
   User? user;
@@ -49,6 +55,18 @@ abstract class _UserStoreBase with Store {
         isLoading = false;
       });
 
+      final userId = user?.id.toString();
+      if (userId != null) {
+        await _secureStorageService.saveUserId(userId);
+        debugPrint('[UserStore] ID do usuário salvo: $userId');
+      }
+
+      final adminId = user?.adminId.toString();
+      if (adminId != null) {
+        await _secureStorageService.saveAdminId(adminId);
+        debugPrint('[UserStore] ID do administrador salvo: $adminId');
+      }
+
       debugPrint(
         '[UserStore] Login e atribuição de usuário bem-sucedidos para: ${user?.email}',
       );
@@ -79,6 +97,8 @@ abstract class _UserStoreBase with Store {
 
     try {
       await _authService.logout();
+      await _secureStorageService.clearUserId();
+
       runInAction(() {
         user = null;
         isLoading = false;
@@ -96,5 +116,25 @@ abstract class _UserStoreBase with Store {
       debugPrint('[UserStore] Falha na ação logout: $e');
       debugPrint('[UserStore] Mensagem de erro definida: $errorMessage');
     }
+  }
+
+  @action
+  Future<String> getUserId() async {
+    final userId = await _secureStorageService.getUserId();
+    if (userId != null) {
+      return userId;
+    }
+
+    return '';
+  }
+
+  @action
+  Future<String> getAdminId() async {
+    final adminId = await _secureStorageService.getAdminId();
+    if (adminId != null) {
+      return adminId;
+    }
+
+    return '';
   }
 }

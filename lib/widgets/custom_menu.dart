@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_comanda/util/constants.dart';
 import 'package:mobile_comanda/util/utils.dart';
 
 class CustomMenu extends StatefulWidget {
@@ -19,7 +20,7 @@ class _CustomMenuState extends State<CustomMenu> {
 
   @override
   Widget build(BuildContext context) {
-    final Color activeColor = Utils.hexToColor('7F1D1D');
+    final Color activeColor = Utils.hexToColor(AppColors.burgundy);
     final Color inactiveColor = Colors.grey.shade600;
 
     return Container(

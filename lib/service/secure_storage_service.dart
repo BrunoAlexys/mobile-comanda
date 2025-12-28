@@ -1,8 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mobile_comanda/enum/biometric_preference.dart';
+import 'package:mobile_comanda/service/token_storage_service.dart';
 
-class SecureStorageService {
+class SecureStorageService implements TokenStorageService {
   final FlutterSecureStorage _storage;
 
   SecureStorageService(this._storage);
@@ -12,6 +13,8 @@ class SecureStorageService {
   static const _keyEmail = 'biometric_email';
   static const _keyPassword = 'biometric_password';
   static const _keyBiometricPreference = 'biometric_preference';
+  static const _userIdKey = 'user_id';
+  static const _adminIdKey = 'admin_id';
 
   Future<void> saveTokens({
     required String accessToken,
@@ -50,6 +53,16 @@ class SecureStorageService {
       debugPrint('[SecureStorageService] Tokens limpos com sucesso.');
     } catch (e) {
       debugPrint('[SecureStorageService] Falha ao limpar tokens: $e');
+    }
+  }
+
+  @override
+  Future<void> clearUserId() async {
+    try {
+      await _storage.delete(key: _userIdKey);
+      debugPrint('[SecureStorageService] ID do usuário limpo com sucesso.');
+    } catch (e) {
+      debugPrint('[SecureStorageService] Falha ao limpar ID do usuário: $e');
     }
   }
 
@@ -123,6 +136,46 @@ class SecureStorageService {
         '[SecureStorageService] Falha ao verificar se biometria está ativa: $e',
       );
       return false;
+    }
+  }
+
+  Future<void> saveUserId(String userId) async {
+    try {
+      await _storage.write(key: _userIdKey, value: userId);
+      debugPrint('[SecureStorageService] ID do usuário salvo com sucesso');
+    } catch (e) {
+      debugPrint('[SecureStorageService] Falha ao salvar ID do usuário: $e');
+    }
+  }
+
+  Future<String?> getUserId() async {
+    try {
+      return await _storage.read(key: _userIdKey);
+    } catch (e) {
+      debugPrint('[SecureStorageService] Falha ao ler ID do usuário: $e');
+      return null;
+    }
+  }
+
+  Future<void> saveAdminId(String adminId) async {
+    try {
+      await _storage.write(key: _adminIdKey, value: adminId);
+      debugPrint(
+        '[SecureStorageService] ID do administrador salvo com sucesso',
+      );
+    } catch (e) {
+      debugPrint(
+        '[SecureStorageService] Falha ao salvar ID do administrador: $e',
+      );
+    }
+  }
+
+  Future<String?> getAdminId() async {
+    try {
+      return await _storage.read(key: _adminIdKey);
+    } catch (e) {
+      debugPrint('[SecureStorageService] Falha ao ler ID do administrador: $e');
+      return null;
     }
   }
 }

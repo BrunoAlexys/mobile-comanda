@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_comanda/util/constants.dart';
+import 'package:mobile_comanda/util/utils.dart';
 
 class CustomButton extends StatelessWidget {
   final double? width;
@@ -24,12 +26,16 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<Color> colors = (gradientColors != null && gradientColors!.isNotEmpty)
+    final List<Color> colors =
+        (gradientColors != null && gradientColors!.isNotEmpty)
         ? gradientColors!
         : [Theme.of(context).primaryColor, Theme.of(context).primaryColorDark];
 
     final activeGradient = LinearGradient(
-      colors: colors,
+      colors: [
+        Utils.hexToColor(AppColors.primaryColor),
+        Utils.hexToColor(AppColors.secondaryColor),
+      ],
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
     );
@@ -49,12 +55,12 @@ class CustomButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius ?? 8.0),
         boxShadow: isEnabled && colors.isNotEmpty
             ? [
-          BoxShadow(
-            color: colors.first.withAlpha((255 * 0.3).round()),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          )
-        ]
+                BoxShadow(
+                  color: colors.first.withAlpha((255 * 0.3).round()),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ]
             : [],
       ),
       child: ClipRRect(
@@ -67,10 +73,7 @@ class CustomButton extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (icon != null) ...[
-                    icon!,
-                    const SizedBox(width: 8),
-                  ],
+                  if (icon != null) ...[icon!, const SizedBox(width: 8)],
                   Text(
                     text,
                     style: const TextStyle(
@@ -78,7 +81,7 @@ class CustomButton extends StatelessWidget {
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
