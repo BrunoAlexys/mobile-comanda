@@ -32,12 +32,12 @@ abstract class _MenuStoreBase with Store {
   String? errorMessage;
 
   @action
-  Future<void> loadUserCategories(int userId) async {
+  Future<void> loadUserCategories(int adminId) async {
     isLoadingCategories = true;
     errorMessage = null;
     try {
       userCategories.clear();
-      List<Category> menuList = await _menuService.fetchCategoryMenu(userId);
+      List<Category> menuList = await _menuService.fetchCategoryMenu(adminId);
       userCategories.addAll(menuList);
     } catch (e) {
       errorMessage = 'Erro ao carregar categorias: $e';
@@ -48,12 +48,12 @@ abstract class _MenuStoreBase with Store {
   }
 
   @action
-  Future<void> loadMenu(int userId, int categoryId) async {
+  Future<void> loadMenu(int adminId, int categoryId) async {
     isLoadingMenu = true;
     errorMessage = null;
     try {
       menuList.clear();
-      final menus = await _menuService.fetchMenu(userId, categoryId);
+      final menus = await _menuService.fetchMenu(adminId, categoryId);
       menuList.addAll(menus);
       allCategoryMenus[categoryId] = ObservableList.of(menus);
     } catch (e) {

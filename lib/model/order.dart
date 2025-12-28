@@ -13,6 +13,7 @@ class Order {
   final DateTime? createdAt;
   final String? status;
   final String userId;
+  final int? adminId;
 
   Order({
     this.id,
@@ -26,6 +27,7 @@ class Order {
     this.createdAt,
     this.status,
     required this.userId,
+    this.adminId,
   });
 
   Map<String, dynamic> toJson() {
@@ -41,6 +43,7 @@ class Order {
 
       'appliedFeeIds': appliedFees?.map((fee) => fee.id).toList() ?? [],
       'userId': userId,
+      'adminId': adminId,
     };
   }
 
@@ -65,6 +68,7 @@ class Order {
           : null,
       status: json['status'] ?? 'PENDING',
       userId: json['userId'],
+      adminId: json['adminId'],
     );
   }
 }

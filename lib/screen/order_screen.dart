@@ -54,7 +54,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
   Future<void> _loadInitialData() async {
     try {
-      final idString = await _userStore.getUserId();
+      final idString = await _userStore.getAdminId();
       final int? parsedId = int.tryParse(idString);
 
       if (parsedId == null) {

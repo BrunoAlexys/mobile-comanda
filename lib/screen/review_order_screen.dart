@@ -35,12 +35,14 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
   bool _isInitializing = true;
   bool _isProcessing = false;
   String? idString;
+  String? adminId;
 
   @override
   void initState() {
     super.initState();
     _commentController.addListener(_updateCharCount);
     _commentController.text = _orderStore.additionalComment;
+    getAdminId();
     _loadInitFee();
   }
 
@@ -51,9 +53,23 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
     super.dispose();
   }
 
+  Future<void> getAdminId() async {
+    try {
+      adminId = await _userStore.getAdminId();
+    } catch (e) {
+      if (mounted) {
+        CustomAlert.warning(
+          context: context,
+          message: 'Falha ao obter ID do administrador: $e',
+          position: AlertPosition.top,
+        );
+      }
+    }
+  }
+
   Future<void> _loadInitFee() async {
     try {
-      idString = await _userStore.getUserId();
+      idString = await _userStore.getAdminId();
       int? parsedId;
       if (idString != null) {
         parsedId = int.tryParse(idString!);
@@ -138,6 +154,7 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
         totalFeesValue: _orderStore.totalFeesValue,
         finalTotalPrice: _orderStore.finalTotalPrice,
         userId: idString!,
+        adminId: int.parse(adminId!),
       );
 
       await Future.delayed(const Duration(milliseconds: 500));

@@ -61,6 +61,12 @@ abstract class _UserStoreBase with Store {
         debugPrint('[UserStore] ID do usuário salvo: $userId');
       }
 
+      final adminId = user?.adminId.toString();
+      if (adminId != null) {
+        await _secureStorageService.saveAdminId(adminId);
+        debugPrint('[UserStore] ID do administrador salvo: $adminId');
+      }
+
       debugPrint(
         '[UserStore] Login e atribuição de usuário bem-sucedidos para: ${user?.email}',
       );
@@ -117,6 +123,16 @@ abstract class _UserStoreBase with Store {
     final userId = await _secureStorageService.getUserId();
     if (userId != null) {
       return userId;
+    }
+
+    return '';
+  }
+
+  @action
+  Future<String> getAdminId() async {
+    final adminId = await _secureStorageService.getAdminId();
+    if (adminId != null) {
+      return adminId;
     }
 
     return '';

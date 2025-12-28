@@ -14,6 +14,7 @@ class SecureStorageService implements TokenStorageService {
   static const _keyPassword = 'biometric_password';
   static const _keyBiometricPreference = 'biometric_preference';
   static const _userIdKey = 'user_id';
+  static const _adminIdKey = 'admin_id';
 
   Future<void> saveTokens({
     required String accessToken,
@@ -152,6 +153,28 @@ class SecureStorageService implements TokenStorageService {
       return await _storage.read(key: _userIdKey);
     } catch (e) {
       debugPrint('[SecureStorageService] Falha ao ler ID do usuário: $e');
+      return null;
+    }
+  }
+
+  Future<void> saveAdminId(String adminId) async {
+    try {
+      await _storage.write(key: _adminIdKey, value: adminId);
+      debugPrint(
+        '[SecureStorageService] ID do administrador salvo com sucesso',
+      );
+    } catch (e) {
+      debugPrint(
+        '[SecureStorageService] Falha ao salvar ID do administrador: $e',
+      );
+    }
+  }
+
+  Future<String?> getAdminId() async {
+    try {
+      return await _storage.read(key: _adminIdKey);
+    } catch (e) {
+      debugPrint('[SecureStorageService] Falha ao ler ID do administrador: $e');
       return null;
     }
   }
