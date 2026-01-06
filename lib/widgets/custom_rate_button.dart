@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:mobile_comanda/core/locator.dart';
-// import 'package:mobile_comanda/model/fee.dart'; // REMOVIDO
-import 'package:mobile_comanda/model/applied_fee.dart'; // CORRIGIDO: Usar a classe correta
+import 'package:mobile_comanda/model/applied_fee.dart';
 import 'package:mobile_comanda/store/order_store.mobx.dart';
 import 'package:mobile_comanda/util/constants.dart';
 import 'package:mobile_comanda/util/utils.dart';
