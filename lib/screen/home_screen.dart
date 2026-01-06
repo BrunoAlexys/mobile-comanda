@@ -4,7 +4,6 @@ import 'package:mobile_comanda/util/utils.dart';
 import 'package:mobile_comanda/widgets/card_table.dart';
 import 'package:mobile_comanda/widgets/custom_appbar.dart';
 import 'package:mobile_comanda/widgets/custom_input.dart';
-import 'package:mobile_comanda/widgets/custom_menu.dart';
 import 'package:mobile_comanda/widgets/status_card.dart';
 import 'package:mobile_comanda/widgets/table_filter_section.dart';
 
@@ -47,7 +46,6 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const CustomMenu(),
     );
   }
 
