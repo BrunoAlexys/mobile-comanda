@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_comanda/model/order.dart';
 import 'package:mobile_comanda/screen/home_screen.dart';
 import 'package:mobile_comanda/screen/login_screen.dart';
 import 'package:mobile_comanda/screen/order_screen.dart';
@@ -20,10 +19,6 @@ class AppRoutes {
       case order:
         return MaterialPageRoute(builder: (_) => OrderScreen());
       case reviewOrder:
-        final args = settings.arguments as Map<String, dynamic>?;
-        final List<Order> orders = args?['orders'] as List<Order>? ?? [];
-        final int? tableNumber = args?['tableNumber'] as int?;
-
         return MaterialPageRoute(builder: (_) => ReviewOrderScreen());
       default:
         return MaterialPageRoute(

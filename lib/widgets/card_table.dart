@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_comanda/core/app_routes.dart';
 import 'package:mobile_comanda/util/utils.dart';
 
 class CardTable extends StatefulWidget {
@@ -20,7 +19,6 @@ class _CardTableState extends State<CardTable> {
     await Future.delayed(const Duration(milliseconds: 600));
 
     if (mounted) {
-      //Navigator.pushNamed(context, AppRoutes.order);
       setState(() {
         _isPressed = false;
       });
