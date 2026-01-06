@@ -13,11 +13,15 @@ class CustomInput extends StatefulWidget {
   final Widget? suffixIcon;
   final Color? fillColor;
   final Color? borderColor;
+  final Color? cursorColor;
   final ValueChanged<String>? onChanged;
   final FormFieldValidator<String>? validator;
   final TextInputAction? textInputAction;
   final FocusNode? focusNode;
   final ValueChanged<String>? onFieldSubmitted;
+  final double borderRadius;
+  final TextStyle? hintStyle;
+  final EdgeInsetsGeometry? contentPadding;
 
   const CustomInput({
     super.key,
@@ -31,11 +35,15 @@ class CustomInput extends StatefulWidget {
     this.suffixIcon,
     this.fillColor,
     this.borderColor,
+    this.cursorColor,
     this.onChanged,
     this.validator,
     this.textInputAction,
     this.focusNode,
     this.onFieldSubmitted,
+    this.borderRadius = 6.0,
+    this.hintStyle,
+    this.contentPadding,
   });
 
   @override
@@ -62,16 +70,11 @@ class _CustomInputState extends State<CustomInput> {
     return TextFormField(
       controller: widget.controller,
       obscureText: _isObscureText,
-      keyboardType: widget.keyboardType,
-      inputFormatters: widget.inputFormatters,
-      validator: widget.validator,
-      textInputAction: widget.textInputAction,
-      focusNode: widget.focusNode,
-      onFieldSubmitted: widget.onFieldSubmitted,
-      onChanged: widget.onChanged,
+      cursorColor: widget.cursorColor ?? Theme.of(context).primaryColor,
       decoration: InputDecoration(
         labelText: widget.labelText,
         hintText: widget.hintText,
+        hintStyle: widget.hintStyle,
         prefixIcon: widget.prefixIcon,
         suffixIcon: widget.obscureText
             ? IconButton(
@@ -84,26 +87,28 @@ class _CustomInputState extends State<CustomInput> {
             : widget.suffixIcon,
         filled: true,
         fillColor: widget.fillColor ?? Utils.hexToColor('F9FAFB'),
+        contentPadding: widget.contentPadding,
+
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6.0),
+          borderRadius: BorderRadius.circular(widget.borderRadius),
           borderSide: BorderSide(
             color: widget.borderColor ?? Utils.hexToColor('D9D9D9'),
             width: 1.0,
           ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6.0),
+          borderRadius: BorderRadius.circular(widget.borderRadius),
           borderSide: BorderSide(
             color: widget.borderColor ?? Utils.hexToColor('D9D9D9'),
             width: 1.0,
           ),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6.0),
+          borderRadius: BorderRadius.circular(widget.borderRadius),
           borderSide: BorderSide(color: Colors.red.shade700, width: 1.0),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6.0),
+          borderRadius: BorderRadius.circular(widget.borderRadius),
           borderSide: BorderSide(color: Colors.red.shade700, width: 2.0),
         ),
       ),
