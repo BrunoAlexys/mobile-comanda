@@ -123,9 +123,9 @@ mixin _$MenuStore on _MenuStoreBase, Store {
   );
 
   @override
-  Future<void> loadUserCategories(int userId) {
+  Future<void> loadUserCategories(int adminId) {
     return _$loadUserCategoriesAsyncAction.run(
-      () => super.loadUserCategories(userId),
+      () => super.loadUserCategories(adminId),
     );
   }
 
@@ -135,8 +135,8 @@ mixin _$MenuStore on _MenuStoreBase, Store {
   );
 
   @override
-  Future<void> loadMenu(int userId, int categoryId) {
-    return _$loadMenuAsyncAction.run(() => super.loadMenu(userId, categoryId));
+  Future<void> loadMenu(int adminId, int categoryId) {
+    return _$loadMenuAsyncAction.run(() => super.loadMenu(adminId, categoryId));
   }
 
   late final _$_MenuStoreBaseActionController = ActionController(
