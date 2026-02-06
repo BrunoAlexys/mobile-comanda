@@ -100,6 +100,16 @@ mixin _$UserStore on _UserStoreBase, Store {
     return _$getUserIdAsyncAction.run(() => super.getUserId());
   }
 
+  late final _$getAdminIdAsyncAction = AsyncAction(
+    '_UserStoreBase.getAdminId',
+    context: context,
+  );
+
+  @override
+  Future<String> getAdminId() {
+    return _$getAdminIdAsyncAction.run(() => super.getAdminId());
+  }
+
   @override
   String toString() {
     return '''

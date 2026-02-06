@@ -367,12 +367,6 @@ class _OrderScreenState extends State<OrderScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 8),
-            Text(
-              'Entre em contato com o estabelecimento para mais informações.',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-              textAlign: TextAlign.center,
-            ),
           ],
         ),
       ),
