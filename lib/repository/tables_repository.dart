@@ -6,19 +6,25 @@ class TableRepository {
 
   TableRepository(this._dioClient);
 
-  Future<List<Tables>> getTables(int adminId) async {
+  Future<List<Tables>> getTables(int adminId, {String? status}) async {
     try {
-      final response = await _dioClient.get('/tables/$adminId');
-      if (response.statusCode == 200 && response.data != null) {
-        if (response.data is List) {
-          return (response.data as List)
-              .map((json) => Tables.fromJson(json))
-              .toList();
-        }
-        return [];
-      } else {
-        throw Exception('Failed to load tables: ${response.statusCode}');
+      final queryParams = <String, dynamic>{};
+
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
       }
+
+      final response = await _dioClient.get(
+        '/tables/$adminId',
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final list = response.data as List? ?? [];
+        return list.map((json) => Tables.fromJson(json)).toList();
+      }
+
+      return [];
     } catch (e) {
       throw Exception('Failed to load tables: $e');
     }

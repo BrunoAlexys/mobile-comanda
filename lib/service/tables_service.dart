@@ -6,12 +6,7 @@ class TablesService {
 
   TablesService(this._tableRepository);
 
-  Future<List<Tables>> fetchTables(int adminId) async {
-    try {
-      final tables = await _tableRepository.getTables(adminId);
-      return tables;
-    } catch (e) {
-      rethrow;
-    }
+  Future<List<Tables>> fetchTables(int adminId, {String? status}) async {
+    return await _tableRepository.getTables(adminId, status: status);
   }
 }
