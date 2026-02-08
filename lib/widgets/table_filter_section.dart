@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:get_it/get_it.dart';
+import 'package:mobile_comanda/store/tables_store.mobx.dart';
 import 'package:mobile_comanda/widgets/filter_chip_button.dart';
 
-class TableFilterSection extends StatefulWidget {
-  const TableFilterSection({super.key});
+class TableFilterSection extends StatelessWidget {
+  final int adminId;
+  final TablesStore _tablesStore = GetIt.I<TablesStore>();
 
-  @override
-  State<TableFilterSection> createState() => _TableFilterSectionState();
-}
-
-class _TableFilterSectionState extends State<TableFilterSection> {
-  String selectedFilter = 'Todas';
+  TableFilterSection({super.key, required this.adminId});
 
   @override
   Widget build(BuildContext context) {
@@ -32,16 +31,23 @@ class _TableFilterSectionState extends State<TableFilterSection> {
         children: [
           const LabelIcon(icon: Icons.filter_alt, label: 'Filtrar Mesas'),
           const SizedBox(height: 16),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildFilterButton('Todas'),
-                _buildFilterButton('Disponíveis'),
-                _buildFilterButton('Ocupadas'),
-                _buildFilterButton('Reservadas'),
-              ],
-            ),
+          Observer(
+            builder: (_) {
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildFilterButton('Todas'),
+                    const SizedBox(width: 8),
+                    _buildFilterButton('Disponíveis'),
+                    const SizedBox(width: 8),
+                    _buildFilterButton('Ocupadas'),
+                    const SizedBox(width: 8),
+                    _buildFilterButton('Reservadas'),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -49,15 +55,30 @@ class _TableFilterSectionState extends State<TableFilterSection> {
   }
 
   Widget _buildFilterButton(String label) {
+    String? buttonBackendValue = _getBackendFilter(label);
+    bool isSelected = _tablesStore.currentFilter == buttonBackendValue;
+
     return FilterChipButton(
       label: label,
-      isSelected: selectedFilter == label,
+      isSelected: isSelected,
       onTap: () {
-        setState(() {
-          selectedFilter = label;
-        });
+        _tablesStore.setFilter(adminId, buttonBackendValue);
       },
     );
+  }
+
+  String? _getBackendFilter(String label) {
+    switch (label) {
+      case 'Disponíveis':
+        return 'AVAILABLE';
+      case 'Ocupadas':
+        return 'OCCUPIED';
+      case 'Reservadas':
+        return 'RESERVED';
+      case 'Todas':
+      default:
+        return null;
+    }
   }
 }
 

@@ -23,6 +23,7 @@ class _CardTableState extends State<CardTable> {
   bool _isPressed = false;
 
   void _handleTap() async {
+    FocusScope.of(context).unfocus();
     setState(() {
       _isPressed = true;
     });

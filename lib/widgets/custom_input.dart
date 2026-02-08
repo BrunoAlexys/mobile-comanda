@@ -68,9 +68,11 @@ class _CustomInputState extends State<CustomInput> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      onChanged: widget.onChanged,
       controller: widget.controller,
       obscureText: _isObscureText,
       cursorColor: widget.cursorColor ?? Theme.of(context).primaryColor,
+      autofocus: false,
       decoration: InputDecoration(
         labelText: widget.labelText,
         hintText: widget.hintText,

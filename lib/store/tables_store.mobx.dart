@@ -1,3 +1,4 @@
+import 'package:mobile_comanda/enum/status_table.dart';
 import 'package:mobile_comanda/model/tables.dart';
 import 'package:mobile_comanda/service/tables_service.dart';
 import 'package:mobx/mobx.dart';
@@ -12,7 +13,7 @@ abstract class _TablesStoreBase with Store {
   _TablesStoreBase(this._tablesService);
 
   @observable
-  ObservableList<Tables> tablesList = ObservableList<Tables>();
+  ObservableList<Tables> allTables = ObservableList<Tables>();
 
   @observable
   bool isLoadingTables = false;
@@ -20,19 +21,60 @@ abstract class _TablesStoreBase with Store {
   @observable
   String? errorMessage;
 
+  @observable
+  String? currentFilter;
+
+  @observable
+  String searchQuery = '';
+
+  @computed
+  List<Tables> get filteredTables {
+    List<Tables> list = allTables;
+    if (currentFilter != null && currentFilter!.isNotEmpty) {
+      list = list
+          .where(
+            (table) =>
+                table.status.name.toUpperCase() == currentFilter!.toUpperCase(),
+          )
+          .toList();
+    }
+
+    if (searchQuery.isNotEmpty) {
+      final query = searchQuery.toLowerCase();
+      list = list.where((table) {
+        return table.numberTable.toString().contains(query) ||
+            table.status.description.toLowerCase().contains(query);
+      }).toList();
+    }
+
+    return list;
+  }
+
   @action
   Future<void> loadTables(int adminId) async {
     isLoadingTables = true;
     errorMessage = null;
     try {
-      tablesList.clear();
+      allTables.clear();
+
       List<Tables> tables = await _tablesService.fetchTables(adminId);
-      tablesList.addAll(tables);
+
+      allTables.addAll(tables);
     } catch (e) {
       errorMessage = 'Erro ao carregar mesas: $e';
       rethrow;
     } finally {
       isLoadingTables = false;
     }
+  }
+
+  @action
+  Future<void> setFilter(int adminId, String? filter) async {
+    currentFilter = filter;
+  }
+
+  @action
+  void setSearchQuery(String query) {
+    searchQuery = query;
   }
 }
