@@ -138,6 +138,30 @@ mixin _$OrderStore on _OrderStore, Store {
   );
 
   @override
+  void incrementProduct(Menu menu) {
+    final _$actionInfo = _$_OrderStoreActionController.startAction(
+      name: '_OrderStore.incrementProduct',
+    );
+    try {
+      return super.incrementProduct(menu);
+    } finally {
+      _$_OrderStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  void decrementProduct(Menu menu) {
+    final _$actionInfo = _$_OrderStoreActionController.startAction(
+      name: '_OrderStore.decrementProduct',
+    );
+    try {
+      return super.decrementProduct(menu);
+    } finally {
+      _$_OrderStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   void addFee(AppliedFee fee) {
     final _$actionInfo = _$_OrderStoreActionController.startAction(
       name: '_OrderStore.addFee',
@@ -156,21 +180,6 @@ mixin _$OrderStore on _OrderStore, Store {
     );
     try {
       return super.removeFee(fee);
-    } finally {
-      _$_OrderStoreActionController.endAction(_$actionInfo);
-    }
-  }
-
-  @override
-  void updateOrders(
-    Map<int, int> productQuantities,
-    List<Map<String, dynamic>> allProducts,
-  ) {
-    final _$actionInfo = _$_OrderStoreActionController.startAction(
-      name: '_OrderStore.updateOrders',
-    );
-    try {
-      return super.updateOrders(productQuantities, allProducts);
     } finally {
       _$_OrderStoreActionController.endAction(_$actionInfo);
     }

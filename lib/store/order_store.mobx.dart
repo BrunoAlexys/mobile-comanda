@@ -50,6 +50,49 @@ abstract class _OrderStore with Store {
   @computed
   bool get isLoading => loadingMessage.isNotEmpty;
 
+  int getQuantity(int productId) {
+    final index = orders.indexWhere((item) => item.menu.id == productId);
+    return index >= 0 ? orders[index].quantity : 0;
+  }
+
+  @action
+  void incrementProduct(Menu menu) {
+    final index = orders.indexWhere((item) => item.menu.id == menu.id);
+
+    if (index >= 0) {
+      final currentItem = orders[index];
+      orders[index] = OrderItem(
+        id: currentItem.id,
+        menu: currentItem.menu,
+        price: currentItem.price,
+        quantity: currentItem.quantity + 1,
+      );
+    } else {
+      orders.add(
+        OrderItem(id: null, menu: menu, price: menu.price, quantity: 1),
+      );
+    }
+  }
+
+  @action
+  void decrementProduct(Menu menu) {
+    final index = orders.indexWhere((item) => item.menu.id == menu.id);
+
+    if (index >= 0) {
+      final currentItem = orders[index];
+      if (currentItem.quantity > 1) {
+        orders[index] = OrderItem(
+          id: currentItem.id,
+          menu: currentItem.menu,
+          price: currentItem.price,
+          quantity: currentItem.quantity - 1,
+        );
+      } else {
+        orders.removeAt(index);
+      }
+    }
+  }
+
   @action
   void addFee(AppliedFee fee) {
     if (!appliedFees.any((f) => f.name == fee.name)) {
@@ -60,36 +103,6 @@ abstract class _OrderStore with Store {
   @action
   void removeFee(AppliedFee fee) {
     appliedFees.removeWhere((f) => f.name == fee.name);
-  }
-
-  @action
-  void updateOrders(
-    Map<int, int> productQuantities,
-    List<Map<String, dynamic>> allProducts,
-  ) {
-    List<OrderItem> newOrders = [];
-
-    productQuantities.forEach((productId, quantity) {
-      if (quantity > 0) {
-        final productMap = allProducts.firstWhere(
-          (p) => p['id'] == productId,
-          orElse: () => throw Exception('Product with ID $productId not found'),
-        );
-
-        final menu = Menu.fromJson(productMap);
-
-        newOrders.add(
-          OrderItem(
-            id: null,
-            menu: menu,
-            price: (productMap['price'] as num).toDouble(),
-            quantity: quantity,
-          ),
-        );
-      }
-    });
-
-    orders = ObservableList.of(newOrders);
   }
 
   @action
@@ -109,9 +122,9 @@ abstract class _OrderStore with Store {
 
   @action
   void clearOrder() {
-    orders = ObservableList.of([]);
+    orders.clear();
     tableNumber = null;
-    appliedFees = ObservableList.of([]);
+    appliedFees.clear();
     additionalComment = '';
   }
 

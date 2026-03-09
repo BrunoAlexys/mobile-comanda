@@ -6,6 +6,7 @@ class Menu {
   final String description;
   final double price;
   final Category category;
+  final String? imageUrl;
 
   Menu({
     required this.id,
@@ -13,6 +14,7 @@ class Menu {
     required this.description,
     required this.price,
     required this.category,
+    this.imageUrl,
   });
 
   factory Menu.fromJson(Map<String, dynamic> json) {
@@ -22,6 +24,7 @@ class Menu {
       description: json['description'],
       price: (json['price'] as num).toDouble(),
       category: Category.fromJson(json['category'] as Map<String, dynamic>),
+      imageUrl: json['imageUrl'] as String?,
     );
   }
 
@@ -32,6 +35,7 @@ class Menu {
       'description': description,
       'price': price,
       'category': category,
+      'imageUrl': imageUrl,
     };
   }
 }
