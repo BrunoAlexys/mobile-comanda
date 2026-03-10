@@ -23,6 +23,9 @@ abstract class _MenuStoreBase with Store {
       ObservableMap<int, ObservableList<Menu>>();
 
   @observable
+  ObservableList<Menu> allMenus = ObservableList<Menu>();
+
+  @observable
   bool isLoadingMenu = false;
 
   @observable
@@ -31,14 +34,51 @@ abstract class _MenuStoreBase with Store {
   @observable
   String? errorMessage;
 
+  @observable
+  String searchQuery = '';
+
+  @observable
+  String? currentFilter;
+
+  @computed
+  List<Menu> get filteredMenu {
+    if (searchQuery.isNotEmpty) {
+      final query = searchQuery.toLowerCase();
+      return allMenus.where((menu) {
+        return menu.name.toLowerCase().contains(query) ||
+            menu.description.toLowerCase().contains(query);
+      }).toList();
+    }
+
+    return menuList.toList();
+  }
+
+  @action
+  Future<void> loadAllMenu(int adminId) async {
+    isLoadingMenu = true;
+    errorMessage = null;
+    try {
+      allMenus.clear();
+      final menus = await _menuService.fetchAllMenu(adminId);
+      allMenus.addAll(menus);
+    } catch (e) {
+      errorMessage = 'Erro ao carregar menu: $e';
+      rethrow;
+    } finally {
+      isLoadingMenu = false;
+    }
+  }
+
   @action
   Future<void> loadUserCategories(int adminId) async {
     isLoadingCategories = true;
     errorMessage = null;
     try {
       userCategories.clear();
-      List<Category> menuList = await _menuService.fetchCategoryMenu(adminId);
-      userCategories.addAll(menuList);
+      List<Category> fetchedCategories = await _menuService.fetchCategoryMenu(
+        adminId,
+      );
+      userCategories.addAll(fetchedCategories);
     } catch (e) {
       errorMessage = 'Erro ao carregar categorias: $e';
       rethrow;
@@ -91,5 +131,10 @@ abstract class _MenuStoreBase with Store {
   @action
   void clearError() {
     errorMessage = null;
+  }
+
+  @action
+  void setSearchQuery(String query) {
+    searchQuery = query;
   }
 }

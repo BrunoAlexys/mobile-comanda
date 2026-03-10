@@ -24,4 +24,13 @@ class MenuService {
       rethrow;
     }
   }
+
+  Future<List<Menu>> fetchAllMenu(int userId) async {
+    try {
+      final menu = await _menuRepository.fetchAllMenu(userId);
+      return menu;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

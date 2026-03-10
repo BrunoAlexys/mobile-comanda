@@ -9,6 +9,15 @@ part of 'menu_store.mobx.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic, no_leading_underscores_for_local_identifiers
 
 mixin _$MenuStore on _MenuStoreBase, Store {
+  Computed<List<Menu>>? _$filteredMenuComputed;
+
+  @override
+  List<Menu> get filteredMenu =>
+      (_$filteredMenuComputed ??= Computed<List<Menu>>(
+        () => super.filteredMenu,
+        name: '_MenuStoreBase.filteredMenu',
+      )).value;
+
   late final _$userCategoriesAtom = Atom(
     name: '_MenuStoreBase.userCategories',
     context: context,
@@ -60,6 +69,24 @@ mixin _$MenuStore on _MenuStoreBase, Store {
   set allCategoryMenus(ObservableMap<int, ObservableList<Menu>> value) {
     _$allCategoryMenusAtom.reportWrite(value, super.allCategoryMenus, () {
       super.allCategoryMenus = value;
+    });
+  }
+
+  late final _$allMenusAtom = Atom(
+    name: '_MenuStoreBase.allMenus',
+    context: context,
+  );
+
+  @override
+  ObservableList<Menu> get allMenus {
+    _$allMenusAtom.reportRead();
+    return super.allMenus;
+  }
+
+  @override
+  set allMenus(ObservableList<Menu> value) {
+    _$allMenusAtom.reportWrite(value, super.allMenus, () {
+      super.allMenus = value;
     });
   }
 
@@ -115,6 +142,52 @@ mixin _$MenuStore on _MenuStoreBase, Store {
     _$errorMessageAtom.reportWrite(value, super.errorMessage, () {
       super.errorMessage = value;
     });
+  }
+
+  late final _$searchQueryAtom = Atom(
+    name: '_MenuStoreBase.searchQuery',
+    context: context,
+  );
+
+  @override
+  String get searchQuery {
+    _$searchQueryAtom.reportRead();
+    return super.searchQuery;
+  }
+
+  @override
+  set searchQuery(String value) {
+    _$searchQueryAtom.reportWrite(value, super.searchQuery, () {
+      super.searchQuery = value;
+    });
+  }
+
+  late final _$currentFilterAtom = Atom(
+    name: '_MenuStoreBase.currentFilter',
+    context: context,
+  );
+
+  @override
+  String? get currentFilter {
+    _$currentFilterAtom.reportRead();
+    return super.currentFilter;
+  }
+
+  @override
+  set currentFilter(String? value) {
+    _$currentFilterAtom.reportWrite(value, super.currentFilter, () {
+      super.currentFilter = value;
+    });
+  }
+
+  late final _$loadAllMenuAsyncAction = AsyncAction(
+    '_MenuStoreBase.loadAllMenu',
+    context: context,
+  );
+
+  @override
+  Future<void> loadAllMenu(int adminId) {
+    return _$loadAllMenuAsyncAction.run(() => super.loadAllMenu(adminId));
   }
 
   late final _$loadUserCategoriesAsyncAction = AsyncAction(
@@ -181,14 +254,30 @@ mixin _$MenuStore on _MenuStoreBase, Store {
   }
 
   @override
+  void setSearchQuery(String query) {
+    final _$actionInfo = _$_MenuStoreBaseActionController.startAction(
+      name: '_MenuStoreBase.setSearchQuery',
+    );
+    try {
+      return super.setSearchQuery(query);
+    } finally {
+      _$_MenuStoreBaseActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   String toString() {
     return '''
 userCategories: ${userCategories},
 menuList: ${menuList},
 allCategoryMenus: ${allCategoryMenus},
+allMenus: ${allMenus},
 isLoadingMenu: ${isLoadingMenu},
 isLoadingCategories: ${isLoadingCategories},
-errorMessage: ${errorMessage}
+errorMessage: ${errorMessage},
+searchQuery: ${searchQuery},
+currentFilter: ${currentFilter},
+filteredMenu: ${filteredMenu}
     ''';
   }
 }

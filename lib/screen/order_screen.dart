@@ -1,8 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:mobile_comanda/core/app_routes.dart';
 import 'package:mobile_comanda/core/locator.dart';
-import 'package:mobile_comanda/model/menu.dart';
 import 'package:mobile_comanda/store/menu_store.mobx.dart';
 import 'package:mobile_comanda/store/order_store.mobx.dart';
 import 'package:mobile_comanda/store/user_store.mobx.dart';
@@ -11,11 +12,10 @@ import 'package:mobile_comanda/util/utils.dart';
 import 'package:mobile_comanda/widgets/custom_alert.dart';
 import 'package:mobile_comanda/widgets/custom_appbar.dart';
 import 'package:mobile_comanda/widgets/custom_category_button.dart';
+import 'package:mobile_comanda/widgets/custom_input.dart';
 import 'package:mobile_comanda/widgets/custom_loading.dart';
 import 'package:mobile_comanda/widgets/custom_order_total.dart';
 import 'package:mobile_comanda/widgets/custom_product_item.dart';
-import 'package:mobile_comanda/widgets/custom_select.dart';
-import 'package:mobx/mobx.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({Key? key}) : super(key: key);
@@ -29,14 +29,13 @@ class _OrderScreenState extends State<OrderScreen> {
   final OrderStore _orderStore = locator<OrderStore>();
   final UserStore _userStore = locator<UserStore>();
 
-  ReactionDisposer? _disposer;
   int? _selectedCategoryId;
   String? _selectedCategoryName;
-  final Map<String, int> _productQuantities = {};
   int? _userId;
   bool _initialLoadComplete = false;
   bool _hasError = false;
   bool _isChangingCategory = false;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -44,12 +43,10 @@ class _OrderScreenState extends State<OrderScreen> {
     _loadInitialData();
   }
 
-  String _getProductKey(int productId) {
-    return '${_selectedCategoryId}_$productId';
-  }
-
-  int _getProductIdFromKey(String productKey) {
-    return int.parse(productKey.split('_')[1]);
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadInitialData() async {
@@ -76,6 +73,8 @@ class _OrderScreenState extends State<OrderScreen> {
         _userId = parsedId;
         _hasError = false;
       });
+
+      await _menuStore.loadAllMenu(_userId!);
 
       await _menuStore.loadUserCategories(_userId!);
 
@@ -119,8 +118,6 @@ class _OrderScreenState extends State<OrderScreen> {
           _isChangingCategory = false;
         });
       }
-
-      _updateOrderList();
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -146,77 +143,11 @@ class _OrderScreenState extends State<OrderScreen> {
         _selectedCategoryId = categoryId;
         _selectedCategoryName = category.name;
         _isChangingCategory = true;
+        _menuStore.setSearchQuery('');
       });
 
       await _loadMenu(_userId!, categoryId);
     }
-  }
-
-  @override
-  void dispose() {
-    _disposer?.call();
-    super.dispose();
-  }
-
-  void _updateOrderList() {
-    final Map<int, int> productQuantities = {};
-
-    _productQuantities.forEach((productKey, quantity) {
-      if (quantity > 0) {
-        final productId = _getProductIdFromKey(productKey);
-        productQuantities[productId] = quantity;
-      }
-    });
-
-    final allProducts = _getAllProductsList();
-    _orderStore.updateOrders(productQuantities, allProducts);
-  }
-
-  List<Map<String, dynamic>> _getAllProductsList() {
-    final List<Map<String, dynamic>> allProducts = [];
-
-    _productQuantities.forEach((productKey, quantity) {
-      if (quantity > 0) {
-        final productId = _getProductIdFromKey(productKey);
-        final categoryId = int.parse(productKey.split('_')[0]);
-
-        final product = _findProductById(categoryId, productId);
-        if (product != null) {
-          allProducts.add({
-            'id': product.id,
-            'name': product.name,
-            'description': product.description,
-            'price': product.price,
-            'category': {
-              'id': product.category.id,
-              'name': product.category.name,
-            },
-          });
-        }
-      }
-    });
-
-    return allProducts;
-  }
-
-  Menu? _findProductById(int categoryId, int productId) {
-    if (_menuStore.allCategoryMenus.containsKey(categoryId)) {
-      final menu = _menuStore.allCategoryMenus[categoryId]!
-          .where((item) => item.id == productId)
-          .cast<Menu?>()
-          .firstOrNull;
-      if (menu != null) return menu;
-    }
-
-    for (final categoryMenus in _menuStore.allCategoryMenus.values) {
-      final menu = categoryMenus
-          .where((item) => item.id == productId)
-          .cast<Menu?>()
-          .firstOrNull;
-      if (menu != null) return menu;
-    }
-
-    return null;
   }
 
   Widget _buildCategorySection() {
@@ -232,14 +163,12 @@ class _OrderScreenState extends State<OrderScreen> {
             children: _menuStore.userCategories.map((category) {
               final String name = category.name;
               final int categoryId = category.id;
-              final IconData icon = CategoryIcon.getIconForCategory(name);
               final bool isSelected = _selectedCategoryId == categoryId;
 
               return Padding(
                 padding: const EdgeInsets.only(right: 12.0),
                 child: CustomCategoryButton(
                   label: name,
-                  icon: icon,
                   isSelected: isSelected,
                   onPressed: () => _onCategorySelected(categoryId),
                 ),
@@ -267,13 +196,13 @@ class _OrderScreenState extends State<OrderScreen> {
 
     return Observer(
       builder: (_) {
-        if (_hasError && _menuStore.menuList.isEmpty) {
+        if (_hasError && _menuStore.filteredMenu.isEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [
+                children: const [
                   Icon(Icons.error_outline, color: Colors.red, size: 48),
                   SizedBox(height: 8),
                   Text(
@@ -286,7 +215,7 @@ class _OrderScreenState extends State<OrderScreen> {
           );
         }
 
-        if (_menuStore.menuList.isEmpty) {
+        if (_menuStore.filteredMenu.isEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -298,9 +227,9 @@ class _OrderScreenState extends State<OrderScreen> {
                     color: Colors.grey[400],
                     size: 48,
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
-                    'Nenhum item encontrado nesta categoria.',
+                    'Nenhum item encontrado.',
                     style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                     textAlign: TextAlign.center,
                   ),
@@ -313,31 +242,22 @@ class _OrderScreenState extends State<OrderScreen> {
         return Wrap(
           spacing: 16.0,
           runSpacing: 16.0,
-          children: _menuStore.menuList.map((menuItem) {
+          children: _menuStore.filteredMenu.asMap().entries.map((entry) {
+            final int index = entry.key;
+            final menuItem = entry.value;
             final int productId = menuItem.id;
-            final String productKey = _getProductKey(productId);
-            final int productQuantity = _productQuantities[productKey] ?? 0;
+            final int productQuantity = _orderStore.getQuantity(productId);
+
             return CustomProductItem(
-              key: ValueKey('product_${_selectedCategoryId}_$productId'),
+              key: ValueKey('product_${productId}_$index'),
               productId: productId,
               productName: menuItem.name,
               productDescription: menuItem.description,
               productPrice: menuItem.price,
               quantity: productQuantity,
-              onIncrement: () {
-                setState(() {
-                  _productQuantities[productKey] = productQuantity + 1;
-                  _updateOrderList();
-                });
-              },
-              onDecrement: () {
-                setState(() {
-                  if (productQuantity > 0) {
-                    _productQuantities[productKey] = productQuantity - 1;
-                    _updateOrderList();
-                  }
-                });
-              },
+              imageUrl: menuItem.imageUrl,
+              onIncrement: () => _orderStore.incrementProduct(menuItem),
+              onDecrement: () => _orderStore.decrementProduct(menuItem),
             );
           }).toList(),
         );
@@ -357,7 +277,7 @@ class _OrderScreenState extends State<OrderScreen> {
               color: Colors.grey[400],
               size: 64,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'Nenhum item disponível no momento',
               style: TextStyle(
@@ -373,47 +293,51 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
+  CustomAppBar _buildAppBar() {
+    return CustomAppBar(
+      title: const Text(
+        'Pedidos',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+        ),
+      ),
+      centerTitle: true,
+      backgroundColorGradient: [
+        Utils.hexToColor(AppColors.primaryColor),
+        Utils.hexToColor(AppColors.secondaryColor),
+      ],
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () {
+          _orderStore.clearOrder();
+          Navigator.pop(context);
+        },
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 10.0),
+          child: IconButton(
+            onPressed: () {},
+            icon: const Icon(
+              Icons.notifications_none,
+              color: Colors.white,
+              size: 28,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_initialLoadComplete) {
       return Scaffold(
         backgroundColor: Colors.grey[50],
-        appBar: CustomAppBar(
-          title: Text(
-            'Pedidos',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
-          centerTitle: true,
-          backgroundColorGradient: [
-            Utils.hexToColor(AppColors.primaryColor),
-            Utils.hexToColor(AppColors.secondaryColor),
-          ],
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () {
-              _orderStore.clearOrder();
-              Navigator.pop(context);
-            },
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 10.0),
-              child: IconButton(
-                onPressed: () {},
-                icon: Icon(
-                  Icons.notifications_none,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-            ),
-          ],
-        ),
-        body: CustomLoading(loadingText: 'Carregando o Menu...'),
+        appBar: _buildAppBar(),
+        body: const CustomLoading(loadingText: 'Carregando o Menu...'),
       );
     }
 
@@ -421,195 +345,91 @@ class _OrderScreenState extends State<OrderScreen> {
     final hasMenuItems = _menuStore.menuList.isNotEmpty;
 
     if (!hasCategories && !hasMenuItems) {
-      return Scaffold(
-        appBar: CustomAppBar(
-          title: Text(
-            'Pedidos',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
-          centerTitle: true,
-          backgroundColorGradient: [
-            Utils.hexToColor(AppColors.primaryColor),
-            Utils.hexToColor(AppColors.secondaryColor),
-          ],
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () {
-              _orderStore.clearOrder();
-              Navigator.pop(context);
-            },
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 10.0),
-              child: IconButton(
-                onPressed: () {},
-                icon: Icon(
-                  Icons.notifications_none,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-            ),
-          ],
-        ),
-        body: _buildEmptyState(),
-      );
+      return Scaffold(appBar: _buildAppBar(), body: _buildEmptyState());
     }
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: CustomAppBar(
-        title: Text(
-          'Pedidos',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColorGradient: [
-          Utils.hexToColor(AppColors.primaryColor),
-          Utils.hexToColor(AppColors.secondaryColor),
-        ],
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            _orderStore.clearOrder();
-            Navigator.pop(context);
-          },
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 10.0),
-            child: IconButton(
-              onPressed: () {},
-              icon: Icon(
-                Icons.notifications_none,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-          ),
-        ],
-      ),
+      resizeToAvoidBottomInset: true,
+      appBar: _buildAppBar(),
       body: Column(
         children: [
-          Expanded(
-            flex: 1,
-            child: SizedBox(
-              width: double.infinity,
-              height: double.infinity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 20, top: 24),
-                    child: Text(
-                      'Selecionar Mesa',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Utils.hexToColor(AppColors.burgundy),
-                      ),
+          Container(
+            color: Colors.grey[50],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 10.0),
+                  child: CustomInput(
+                    hintText: 'Buscar pratos...',
+                    borderRadius: 16.0,
+                    fillColor: Colors.white,
+                    borderColor: const Color(0xFFE2E8F0),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Color(0xFF94A3B8),
+                      size: 28,
                     ),
+                    onChanged: (value) {
+                      if (_debounce?.isActive ?? false) _debounce!.cancel();
+                      _debounce = Timer(const Duration(milliseconds: 500), () {
+                        _menuStore.setSearchQuery(value);
+                      });
+                    },
                   ),
+                ),
+                if (hasCategories)
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0,
-                      vertical: 12.0,
-                    ),
-                    child: Observer(
-                      builder: (_) {
-                        return CustomSelect<int>(
-                          hint: 'Selecione uma mesa',
-                          items: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                          itemLabel: (item) => 'Mesa $item',
-                          menuMaxHeight: 250.0,
-                          value: _orderStore.tableNumber,
-                          onChanged: (value) {
-                            _orderStore.setTableNumber(value);
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                  if (hasCategories) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10.0),
-                      child: Container(
-                        height: 60,
+                    padding: const EdgeInsets.only(bottom: 10.0, top: 10.0),
+                    child: SizedBox(
+                      height: 50,
+                      width: double.infinity,
+                      child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20.0),
                         child: _buildCategorySection(),
                       ),
                     ),
-                  ],
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
           Expanded(
-            flex: 3,
-            child: SizedBox(
-              width: double.infinity,
-              height: double.infinity,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (hasCategories) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20, top: 24),
-                      child: Text(
-                        _selectedCategoryName ?? 'Selecione uma categoria',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Utils.hexToColor(AppColors.burgundy),
-                        ),
-                      ),
-                    ),
-                  ],
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                          top: 12.0,
-                          left: 8,
-                          right: 8,
-                        ),
-                        child: _buildMenuSection(),
-                      ),
-                    ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(
+                    top: 10.0,
+                    left: 20.0,
+                    right: 20.0,
                   ),
-                  Observer(
-                    builder: (_) {
-                      return CustomOrderTotal(
-                        order: _orderStore.orders,
-                        isOrderValid: _orderStore.isOrderValid,
-                        finalTotalPrice: _orderStore.finalTotalPrice,
-                        onNext: () {
-                          if (_orderStore.tableNumber == null) {
-                            CustomAlert.warning(
-                              context: context,
-                              message: 'Selecione uma mesa antes de continuar!',
-                              position: AlertPosition.top,
-                            );
-                            return;
-                          }
-
-                          Navigator.pushNamed(context, AppRoutes.reviewOrder);
-                        },
-                      );
-                    },
+                  child: Divider(height: 1, color: Utils.hexToColor('EAEAEA')),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 16.0,
+                    ),
+                    child: _buildMenuSection(),
                   ),
-                ],
-              ),
+                ),
+                Observer(
+                  builder: (_) {
+                    return CustomOrderTotal(
+                      order: _orderStore.orders,
+                      isOrderValid: _orderStore.isOrderValid,
+                      finalTotalPrice: _orderStore.finalTotalPrice,
+                      onNext: () {
+                        Navigator.pushNamed(context, AppRoutes.reviewOrder);
+                      },
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ],

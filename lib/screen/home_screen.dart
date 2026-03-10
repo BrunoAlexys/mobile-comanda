@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:get_it/get_it.dart';
-import 'package:mobile_comanda/core/app_routes.dart';
+import 'package:mobile_comanda/core/locator.dart';
 import 'package:mobile_comanda/enum/status_table.dart';
 import 'package:mobile_comanda/store/tables_store.mobx.dart';
 import 'package:mobile_comanda/store/user_store.mobx.dart';
@@ -22,8 +21,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final TablesStore _tablesStore = GetIt.I<TablesStore>();
-  final UserStore _userStore = GetIt.I<UserStore>();
+  final TablesStore _tablesStore = locator<TablesStore>();
+  final UserStore _userStore = locator<UserStore>();
   int adminId = 0;
   Timer? _debounce;
 
@@ -54,7 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: _buildAppBar(),
-      // Usando CustomScrollView para performance superior com Slivers
       body: CustomScrollView(
         slivers: [
           SliverPadding(
