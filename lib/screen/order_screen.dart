@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:mobile_comanda/core/app_routes.dart';
@@ -33,6 +35,7 @@ class _OrderScreenState extends State<OrderScreen> {
   bool _initialLoadComplete = false;
   bool _hasError = false;
   bool _isChangingCategory = false;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -42,6 +45,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     super.dispose();
   }
 
@@ -69,6 +73,8 @@ class _OrderScreenState extends State<OrderScreen> {
         _userId = parsedId;
         _hasError = false;
       });
+
+      await _menuStore.loadAllMenu(_userId!);
 
       await _menuStore.loadUserCategories(_userId!);
 
@@ -137,6 +143,7 @@ class _OrderScreenState extends State<OrderScreen> {
         _selectedCategoryId = categoryId;
         _selectedCategoryName = category.name;
         _isChangingCategory = true;
+        _menuStore.setSearchQuery('');
       });
 
       await _loadMenu(_userId!, categoryId);
@@ -189,7 +196,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
     return Observer(
       builder: (_) {
-        if (_hasError && _menuStore.menuList.isEmpty) {
+        if (_hasError && _menuStore.filteredMenu.isEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -208,7 +215,7 @@ class _OrderScreenState extends State<OrderScreen> {
           );
         }
 
-        if (_menuStore.menuList.isEmpty) {
+        if (_menuStore.filteredMenu.isEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -222,7 +229,7 @@ class _OrderScreenState extends State<OrderScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Nenhum item encontrado nesta categoria.',
+                    'Nenhum item encontrado.',
                     style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                     textAlign: TextAlign.center,
                   ),
@@ -235,12 +242,14 @@ class _OrderScreenState extends State<OrderScreen> {
         return Wrap(
           spacing: 16.0,
           runSpacing: 16.0,
-          children: _menuStore.menuList.map((menuItem) {
+          children: _menuStore.filteredMenu.asMap().entries.map((entry) {
+            final int index = entry.key;
+            final menuItem = entry.value;
             final int productId = menuItem.id;
             final int productQuantity = _orderStore.getQuantity(productId);
 
             return CustomProductItem(
-              key: ValueKey('product_${_selectedCategoryId}_$productId'),
+              key: ValueKey('product_${productId}_$index'),
               productId: productId,
               productName: menuItem.name,
               productDescription: menuItem.description,
@@ -353,20 +362,21 @@ class _OrderScreenState extends State<OrderScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 10.0),
-                  child: Observer(
-                    builder: (_) {
-                      return CustomInput(
-                        hintText: 'Buscar pratos...',
-                        borderRadius: 16.0,
-                        fillColor: Colors.white,
-                        borderColor: const Color(0xFFE2E8F0),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: Color(0xFF94A3B8),
-                          size: 28,
-                        ),
-                        onChanged: (value) {},
-                      );
+                  child: CustomInput(
+                    hintText: 'Buscar pratos...',
+                    borderRadius: 16.0,
+                    fillColor: Colors.white,
+                    borderColor: const Color(0xFFE2E8F0),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Color(0xFF94A3B8),
+                      size: 28,
+                    ),
+                    onChanged: (value) {
+                      if (_debounce?.isActive ?? false) _debounce!.cancel();
+                      _debounce = Timer(const Duration(milliseconds: 500), () {
+                        _menuStore.setSearchQuery(value);
+                      });
                     },
                   ),
                 ),
@@ -414,14 +424,6 @@ class _OrderScreenState extends State<OrderScreen> {
                       isOrderValid: _orderStore.isOrderValid,
                       finalTotalPrice: _orderStore.finalTotalPrice,
                       onNext: () {
-                        if (_orderStore.tableNumber == null) {
-                          CustomAlert.warning(
-                            context: context,
-                            message: 'Selecione uma mesa antes de continuar!',
-                            position: AlertPosition.top,
-                          );
-                          return;
-                        }
                         Navigator.pushNamed(context, AppRoutes.reviewOrder);
                       },
                     );

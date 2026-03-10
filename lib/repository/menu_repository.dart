@@ -46,4 +46,23 @@ class MenuRepository {
       rethrow;
     }
   }
+
+  Future<List<Menu>> fetchAllMenu(int userId) async {
+    try {
+      final response = await _dioClient.get('/menu/user/$userId');
+      if (response.statusCode == 200 && response.data != null) {
+        if (response.data is List) {
+          return (response.data as List)
+              .map((json) => Menu.fromJson(json))
+              .toList();
+        }
+
+        return [];
+      } else {
+        return [];
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
