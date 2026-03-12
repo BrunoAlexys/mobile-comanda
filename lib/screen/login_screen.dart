@@ -153,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return AlertDialog(
           title: const Text('Login por Biometria'),
           content: const Text(
-            'Deseja habilitar o login rápido com sua digital ou rosto?',
+            'Deseja habilitar o login rápido com sua digital?',
           ),
           actions: <Widget>[
             TextButton(

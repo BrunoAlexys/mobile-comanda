@@ -90,6 +90,26 @@ mixin _$UserStore on _UserStoreBase, Store {
     return _$logoutAsyncAction.run(() => super.logout());
   }
 
+  late final _$getUserIdAsyncAction = AsyncAction(
+    '_UserStoreBase.getUserId',
+    context: context,
+  );
+
+  @override
+  Future<String> getUserId() {
+    return _$getUserIdAsyncAction.run(() => super.getUserId());
+  }
+
+  late final _$getAdminIdAsyncAction = AsyncAction(
+    '_UserStoreBase.getAdminId',
+    context: context,
+  );
+
+  @override
+  Future<String> getAdminId() {
+    return _$getAdminIdAsyncAction.run(() => super.getAdminId());
+  }
+
   @override
   String toString() {
     return '''

@@ -25,5 +25,8 @@ jobs:
       - name: 📥 Instalar dependências
         run: flutter pub get
 
+      - name: 📄 Criar arquivo .env (dummy)
+        run: touch .env
+
       - name: 🔍 Analisar código
         run: flutter analyze --no-fatal-infos .
