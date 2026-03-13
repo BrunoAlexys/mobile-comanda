@@ -3,11 +3,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mobile_comanda/api/auth_interceptor.dart';
+import 'package:mobile_comanda/service/secure_storage_service.dart';
+import 'package:mobile_comanda/core/locator.dart';
 
 class DioClient {
   final Dio _dio;
+  final SecureStorageService secureStorageService;
 
-  DioClient(this._dio, GlobalKey<NavigatorState> navigatorKey) {
+  DioClient(this._dio, GlobalKey<NavigatorState> navigatorKey)
+    : secureStorageService = locator<SecureStorageService>() {
     _dio
       ..options.baseUrl = dotenv.env['BASE_URL']!
       ..options.connectTimeout = const Duration(seconds: 20)
@@ -51,8 +55,10 @@ class DioClient {
     _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
-  void removeAuthToken() {
+  void removeAuthToken() async {
     _dio.options.headers.remove('Authorization');
+    await secureStorageService.clearTokens();
+    await secureStorageService.clearUserId();
   }
 
   Future<Response> get(

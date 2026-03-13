@@ -14,8 +14,13 @@ class UserStore = _UserStoreBase with _$UserStore;
 abstract class _UserStoreBase with Store {
   final UserService _userService;
   final AuthService _authService;
+  final SecureStorageService _secureStorageService;
 
-  _UserStoreBase(this._userService, this._authService);
+  _UserStoreBase(
+    this._userService,
+    this._authService,
+    this._secureStorageService,
+  );
 
   @observable
   User? user;
@@ -54,6 +59,18 @@ abstract class _UserStoreBase with Store {
         user = User.fromJson(userData);
         isLoading = false;
       });
+
+      final userId = user?.id.toString();
+      if (userId != null) {
+        await _secureStorageService.saveUserId(userId);
+        debugPrint('[UserStore] ID do usuário salvo: $userId');
+      }
+
+      final adminId = user?.adminId.toString();
+      if (adminId != null) {
+        await _secureStorageService.saveAdminId(adminId);
+        debugPrint('[UserStore] ID do administrador salvo: $adminId');
+      }
 
       debugPrint(
         '[UserStore] Login e atribuição de usuário bem-sucedidos para: ${user?.email}',
@@ -109,9 +126,13 @@ abstract class _UserStoreBase with Store {
 
     try {
       await _authService.logout();
+<<<<<<< HEAD
 
       final secureStorage = locator<SecureStorageService>();
       await secureStorage.deleteEmail();
+=======
+      await _secureStorageService.clearUserId();
+>>>>>>> bd2baabcedf73ed8a343c5707b62051ce69f257a
 
       runInAction(() {
         user = null;
@@ -131,4 +152,28 @@ abstract class _UserStoreBase with Store {
       debugPrint('[UserStore] Mensagem de erro definida: $errorMessage');
     }
   }
+<<<<<<< HEAD
 }
+=======
+
+  @action
+  Future<String> getUserId() async {
+    final userId = await _secureStorageService.getUserId();
+    if (userId != null) {
+      return userId;
+    }
+
+    return '';
+  }
+
+  @action
+  Future<String> getAdminId() async {
+    final adminId = await _secureStorageService.getAdminId();
+    if (adminId != null) {
+      return adminId;
+    }
+
+    return '';
+  }
+}
+>>>>>>> bd2baabcedf73ed8a343c5707b62051ce69f257a

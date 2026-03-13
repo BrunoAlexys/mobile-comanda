@@ -1,207 +1,243 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:mobile_comanda/core/locator.dart';
+import 'package:mobile_comanda/enum/status_table.dart';
+import 'package:mobile_comanda/store/tables_store.mobx.dart';
+import 'package:mobile_comanda/store/user_store.mobx.dart';
 import 'package:mobile_comanda/util/constants.dart';
 import 'package:mobile_comanda/util/utils.dart';
+import 'package:mobile_comanda/widgets/card_table.dart';
 import 'package:mobile_comanda/widgets/custom_appbar.dart';
-import 'package:mobile_comanda/widgets/custom_menu.dart';
+import 'package:mobile_comanda/widgets/custom_input.dart';
+import 'package:mobile_comanda/widgets/status_card.dart';
+import 'package:mobile_comanda/widgets/table_filter_section.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final TablesStore _tablesStore = locator<TablesStore>();
+  final UserStore _userStore = locator<UserStore>();
+  int adminId = 0;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _getTables();
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  Future<int> getAdminId() async {
+    final adminIdStr = await _userStore.getAdminId();
+    return int.tryParse(adminIdStr) ?? 0;
+  }
+
+  void _getTables() async {
+    adminId = await getAdminId();
+    await _tablesStore.loadTables(adminId);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        title: Column(
+      backgroundColor: Colors.grey[50],
+      appBar: _buildAppBar(),
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _buildStatusRow(),
+                const SizedBox(height: 24),
+                TableFilterSection(adminId: adminId),
+                const SizedBox(height: 24),
+                _buildSearchInput(),
+                const SizedBox(height: 24),
+              ]),
+            ),
+          ),
+          _buildGridSection(),
+        ],
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return CustomAppBar(
+      title: Padding(
+        padding: const EdgeInsets.only(left: 16),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Comanda Online',
+            const Text(
+              'Comandas',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
-          ],
-        ),
-        backgroundColorGradient: [
-          Utils.hexToColor(AppColors.primaryColor),
-          Utils.hexToColor(AppColors.secondaryColor),
-        ],
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 10.0),
-            child: IconButton(
-              onPressed: () {},
-              icon: Icon(
-                Icons.notifications_none,
-                color: Colors.white,
-                size: 28,
+            Text(
+              'Gerenciamento de Mesas',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 14,
               ),
             ),
-          ),
-        ],
-        automaticallyImplyLeading: false,
+          ],
+        ),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(height: 36),
-          _NewOrderCard(),
-          _PendingOrdersCard(pendingOrders: []),
-        ],
-      ),
-      bottomNavigationBar: CustomMenu(),
+      backgroundColorGradient: [
+        Utils.hexToColor(AppColors.secondaryColor),
+        Utils.hexToColor(AppColors.primaryColor),
+      ],
+      actions: [
+        IconButton(
+          onPressed: () {},
+          icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+        ),
+      ],
+      automaticallyImplyLeading: false,
     );
   }
-}
 
-class _NewOrderCard extends StatelessWidget {
-  const _NewOrderCard({Key? key}) : super(key: key);
+  Widget _buildStatusRow() {
+    return Observer(
+      builder: (_) {
+        var statusCount = _tablesStore.allTables.fold(
+          <String, int>{
+            StatusTable.available.name: 0,
+            StatusTable.occupied.name: 0,
+            StatusTable.reserved.name: 0,
+          },
+          (acumulator, table) {
+            final statusName = table.status.name;
+            acumulator[statusName] = (acumulator[statusName] ?? 0) + 1;
+            return acumulator;
+          },
+        );
 
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        print('Fazer Novo Pedido Clicado!');
-      },
-      borderRadius: const BorderRadius.all(Radius.circular(10)),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
-          gradient: LinearGradient(
-            colors: [
-              Utils.hexToColor(AppColors.primaryColor),
-              Utils.hexToColor(AppColors.secondaryColor),
-            ],
-            begin: Alignment.centerRight,
-            end: Alignment.centerLeft,
-          ),
-        ),
-        child: Row(
+        return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.add_rounded,
-                    color: Utils.hexToColor(AppColors.primaryColor),
-                    size: 40,
-                  ),
-                ),
-                SizedBox(height: 14),
-                Text(
-                  'Fazer Novo Pedido',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Explore o menu para realizar um novo pedido',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
-                ),
-                SizedBox(height: 8),
-              ],
+            StatusCard(
+              title: 'Disponíveis',
+              value: statusCount[StatusTable.available.name] ?? 0,
+              icon: Icons.check,
+              color: Colors.green,
             ),
-            Icon(Icons.arrow_forward, color: Colors.white),
+            StatusCard(
+              title: 'Ocupadas',
+              value: statusCount[StatusTable.occupied.name] ?? 0,
+              icon: Icons.people_alt,
+              color: Colors.blueAccent,
+            ),
+            StatusCard(
+              title: 'Reservadas',
+              value: statusCount[StatusTable.reserved.name] ?? 0,
+              icon: Icons.access_time_filled,
+              color: Colors.orange,
+            ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
-}
 
-class _PendingOrdersCard extends StatelessWidget {
-  final List<int> pendingOrders;
-  const _PendingOrdersCard({Key? key, required this.pendingOrders})
-    : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        print('Pedidos Pendentes Clicado!');
+  Widget _buildSearchInput() {
+    return CustomInput(
+      hintText: 'Buscar mesa...',
+      borderRadius: 16.0,
+      fillColor: Colors.white,
+      borderColor: const Color(0xFFE2E8F0),
+      prefixIcon: const Icon(Icons.search, color: Color(0xFF94A3B8), size: 28),
+      onChanged: (value) {
+        if (_debounce?.isActive ?? false) _debounce!.cancel();
+        _debounce = Timer(const Duration(milliseconds: 300), () {
+          _tablesStore.setSearchQuery(value);
+        });
       },
-      borderRadius: const BorderRadius.all(Radius.circular(10)),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-        padding: const EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: Utils.hexToColor(AppColors.primaryColor),
-            width: 1.0,
+    );
+  }
+
+  Widget _buildGridSection() {
+    return Observer(
+      builder: (_) {
+        if (_tablesStore.isLoadingTables) {
+          return const SliverFillRemaining(
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final tables = _tablesStore.filteredTables;
+
+        if (tables.isEmpty) {
+          return SliverFillRemaining(
+            hasScrollBody: false,
+            child: _buildEmptyState(),
+          );
+        }
+
+        return SliverPadding(
+          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              mainAxisExtent: 200,
+            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final table = tables[index];
+              return CardTable(
+                key: ValueKey(table.id),
+                tableNumber: table.numberTable.toString(),
+                chairsAvailable: table.chairsAvailable,
+                status: table.status,
+              );
+            }, childCount: tables.length),
           ),
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(height: 40),
+        Icon(
+          Icons.table_restaurant_outlined,
+          size: 64,
+          color: Colors.grey[400],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Utils.hexToColor('FFD1D1').withOpacity(0.5),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: Icon(
-                        Icons.access_time_filled_rounded,
-                        color: Utils.hexToColor('7F1D1D'),
-                        size: 40,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Pedidos Pendentes',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'Acompanhe os pedidos que estão aguardando à retirada.',
-                    style: TextStyle(color: Colors.black, fontSize: 14),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: Utils.hexToColor(AppColors.primaryColor),
-                shape: BoxShape.circle,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Text(
-                  '${pendingOrders.length}',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
+        const SizedBox(height: 24),
+        Text(
+          'Nenhuma mesa encontrada',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[800],
+          ),
         ),
-      ),
+        Text(
+          'Não há mesas para os filtros aplicados.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+        ),
+      ],
     );
   }
 }

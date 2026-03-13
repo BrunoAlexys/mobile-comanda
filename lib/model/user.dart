@@ -4,6 +4,7 @@ class User {
   final String email;
   final String telephone;
   final List<String> profiles;
+  final int? adminId;
 
   User({
     required this.id,
@@ -11,6 +12,7 @@ class User {
     required this.email,
     required this.telephone,
     required this.profiles,
+    this.adminId,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class User {
       email: json['email'],
       telephone: json['telephone'],
       profiles: List<String>.from((json['profiles'] as List<dynamic>?) ?? []),
+      adminId: json['adminId'],
     );
   }
 
@@ -30,6 +33,7 @@ class User {
       'email': email,
       'telephone': telephone,
       'profiles': profiles,
+      'adminId': adminId,
     };
   }
 }

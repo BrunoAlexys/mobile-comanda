@@ -28,6 +28,7 @@ class AuthService {
           accessToken: accessToken,
           refreshToken: refreshToken,
         );
+
         debugPrint('[AuthService] Login bem-sucedido e tokens salvos.');
       } else {
         throw Exception(
