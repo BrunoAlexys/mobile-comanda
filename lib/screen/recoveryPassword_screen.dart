@@ -19,39 +19,22 @@ class _RecoveryPasswordScreenState extends State<RecoveryPasswordScreen> {
   bool _obscureConfirm = true;
   bool _isLoading = false;
 
-  int _selectedIndex = 2;
-
   Future<void> _handleSave() async {
-    if (_newPasswordController.text.isEmpty || _currentPasswordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Preencha todos os campos"), backgroundColor: Colors.orange),
-      );
-      return;
-    }
-
     setState(() => _isLoading = true);
 
     try {
       await locator<UserService>().changeUserPassword(
+        userId: 1, 
         currentPassword: _currentPasswordController.text,
         newPassword: _newPasswordController.text,
         confirmPassword: _confirmPasswordController.text,
       );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Senha alterada com sucesso!"), backgroundColor: Colors.green),
-        );
-        Navigator.of(context).pop();
-      }
+      Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll('Exception: ', '')), backgroundColor: Colors.red),
-        );
-      }
+      debugPrint(e.toString());
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
     }
   }
 
@@ -81,12 +64,6 @@ class _RecoveryPasswordScreenState extends State<RecoveryPasswordScreen> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -104,10 +81,7 @@ class _RecoveryPasswordScreenState extends State<RecoveryPasswordScreen> {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: primaryRed,
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: const BoxDecoration(color: primaryRed, shape: BoxShape.circle),
                     child: const Icon(Icons.security, color: Colors.white, size: 24),
                   ),
                   const SizedBox(width: 16),
@@ -117,20 +91,12 @@ class _RecoveryPasswordScreenState extends State<RecoveryPasswordScreen> {
                       children: [
                         Text(
                           "Segurança da conta",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.black87,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
                         ),
                         SizedBox(height: 6),
                         Text(
                           "Para sua segurança, escolha uma senha forte com pelo menos 8 caracteres, incluindo letras, números e símbolos.",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black54,
-                            height: 1.3,
-                          ),
+                          style: TextStyle(fontSize: 14, color: Colors.black54, height: 1.3),
                         ),
                       ],
                     ),
@@ -144,9 +110,7 @@ class _RecoveryPasswordScreenState extends State<RecoveryPasswordScreen> {
               hint: "Digite sua senha atual",
               controller: _currentPasswordController,
               obscureText: _obscureCurrent,
-              onToggleVisibility: () {
-                setState(() => _obscureCurrent = !_obscureCurrent);
-              },
+              onToggleVisibility: () => setState(() => _obscureCurrent = !_obscureCurrent),
             ),
             const SizedBox(height: 20),
             _buildPasswordField(
@@ -154,9 +118,7 @@ class _RecoveryPasswordScreenState extends State<RecoveryPasswordScreen> {
               hint: "Digite sua nova senha",
               controller: _newPasswordController,
               obscureText: _obscureNew,
-              onToggleVisibility: () {
-                setState(() => _obscureNew = !_obscureNew);
-              },
+              onToggleVisibility: () => setState(() => _obscureNew = !_obscureNew),
             ),
             const SizedBox(height: 20),
             _buildPasswordField(
@@ -164,9 +126,7 @@ class _RecoveryPasswordScreenState extends State<RecoveryPasswordScreen> {
               hint: "Confirme sua nova senha",
               controller: _confirmPasswordController,
               obscureText: _obscureConfirm,
-              onToggleVisibility: () {
-                setState(() => _obscureConfirm = !_obscureConfirm);
-              },
+              onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm),
             ),
             const SizedBox(height: 40),
             SizedBox(
@@ -176,9 +136,7 @@ class _RecoveryPasswordScreenState extends State<RecoveryPasswordScreen> {
                 onPressed: _isLoading ? null : _handleSave,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryRed,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   elevation: 0,
                 ),
                 child: _isLoading
@@ -189,40 +147,12 @@ class _RecoveryPasswordScreenState extends State<RecoveryPasswordScreen> {
                       )
                     : const Text(
                         "Salvar",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
               ),
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF8B0000),
-        unselectedItemColor: Colors.grey,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Início',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_bag),
-            label: 'Pedidos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Perfil',
-          ),
-        ],
       ),
     );
   }
@@ -239,11 +169,7 @@ class _RecoveryPasswordScreenState extends State<RecoveryPasswordScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: Colors.black87,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -253,14 +179,7 @@ class _RecoveryPasswordScreenState extends State<RecoveryPasswordScreen> {
             hintText: hint,
             hintStyle: const TextStyle(color: Colors.grey),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Colors.grey),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             suffixIcon: IconButton(
               icon: Icon(
                 obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,

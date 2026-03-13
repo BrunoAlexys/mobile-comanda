@@ -8,22 +8,24 @@ class UserRepository {
   Future<Map<String, dynamic>> fetchUser(String email) async {
     try {
       final response = await _dioClient.get('/users/$email');
-
       if (response.statusCode == 200 && response.data != null) {
         return response.data;
       } else {
-        throw Exception('Failed to load user data');
+        throw Exception('Erro ao carregar dados do usuário');
       }
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<void> updatePassword(String oldPassword, String newPassword) async {
+  Future<void> updatePassword(int userId, String currentPassword, String newPassword) async {
     try {
       await _dioClient.patch(
-        '/users/1/password',
-        data: {'currentPassword': oldPassword, 'newPassword': newPassword},
+        '/api/users/1/password',
+        data: {
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        },
       );
     } catch (e) {
       rethrow;
