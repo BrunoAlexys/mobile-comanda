@@ -76,13 +76,16 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
       }
 
       if (parsedId != null) {
-        await _feeStore.fetchFeeByUser(parsedId);
+        await Future.wait([
+          _feeStore.fetchFeeByUser(parsedId),
+          _orderStore.fetchNextOrderNumber(parsedId),
+        ]);
       }
     } catch (e) {
       if (mounted) {
         CustomAlert.warning(
           context: context,
-          message: 'Falha ao carregar taxas: $e',
+          message: 'Falha ao carregar dados iniciais: $e',
           position: AlertPosition.top,
         );
       }
@@ -125,7 +128,8 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
 
   void _sendOrder() async {
     if (_orderStore.isLoading || _isProcessing) return;
-
+    // Problema aqui
+    debugPrint('Numero da mesa: ${_orderStore.tableNumber}');
     if (_orderStore.tableNumber == null || !_orderStore.isOrderValid) {
       if (mounted) {
         CustomAlert.warning(
@@ -345,77 +349,191 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
                               top: 24,
                               bottom: 20,
                             ),
-                            child: CustomOrder(
-                              orders: [currentOrder],
-                              tableNumber: currentOrder.tableNumber,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ...itemsToDisplay.map((item) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 4.0,
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            '${item.quantity}x ${item.menu.name}',
-                                            style: TextStyle(
-                                              color: Utils.hexToColor(
-                                                AppColors.grayColorSecondary,
-                                              ),
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          Text(
-                                            Utils.formatPrice(
-                                              item.price * item.quantity,
-                                            ),
-                                            style: const TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  }),
-                                  if (_orderStore.additionalComment.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 8.0),
-                                      child: Text(
-                                        'Obs: ${_orderStore.additionalComment}',
-                                        style: TextStyle(
-                                          color: Utils.hexToColor(
-                                            AppColors.burgundy,
-                                          ),
-                                          fontSize: 12,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ),
+                            child: Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(8),
+                                ),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.white,
+                                    spreadRadius: 2,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
                                 ],
                               ),
-                            ),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(left: 16),
-                            child: Text(
-                              'Adicionar Comentário',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 20,
+                                  right: 20,
+                                  top: 16,
+                                  bottom: 16,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "# ${_orderStore.orderNumber.isNotEmpty ? _orderStore.orderNumber : '0000'}",
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "Mesa ${currentOrder.tableNumber.toString()}",
+                                      style: TextStyle(
+                                        color: Utils.hexToColor('9C9C9C'),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Horario de entrada',
+                                          style: TextStyle(
+                                            color: Utils.hexToColor('4B5563'),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: _buildCommentField(),
+                            padding: const EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              top: 24,
+                              bottom: 20,
+                            ),
+                            child: CustomOrder(
+                              orders: [currentOrder],
+                              tableNumber: currentOrder.tableNumber,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxHeight: 250,
+                                ),
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: itemsToDisplay.length,
+                                  itemBuilder: (context, index) {
+                                    final item = itemsToDisplay[index];
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 4.0,
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Expanded(
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        left: 16,
+                                                        right: 8,
+                                                      ),
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        '${item.quantity}x ${item.menu.name}',
+                                                        style: const TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      Text(
+                                                        item.menu.description,
+                                                        style: TextStyle(
+                                                          color:
+                                                              Utils.hexToColor(
+                                                                '848484',
+                                                              ),
+                                                          fontSize: 12,
+                                                          fontStyle:
+                                                              FontStyle.italic,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              Text(
+                                                Utils.formatPrice(
+                                                  item.price * item.quantity,
+                                                ),
+                                                style: const TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          Divider(
+                                            color: Colors.grey.shade300,
+                                            thickness: 1,
+                                            height: 24,
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
                           ),
+                          if (_orderStore.additionalComment.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: 8.0,
+                                left: 16,
+                              ),
+                              child: Text(
+                                'Obs: ${_orderStore.additionalComment}',
+                                style: TextStyle(
+                                  color: Utils.hexToColor(AppColors.burgundy),
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
                           const Padding(
-                            padding: EdgeInsets.only(top: 10, left: 16),
+                            padding: EdgeInsets.only(top: 24, left: 16),
                             child: Text(
                               'Adicionar Taxas',
                               style: TextStyle(
@@ -427,6 +545,7 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
                           Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16.0,
+                              vertical: 8.0,
                             ),
                             child: IgnorePointer(
                               ignoring: showLoading,
@@ -463,6 +582,21 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
                               ),
                             ),
                           ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 16, top: 16),
+                            child: Text(
+                              'Adicionar Comentário',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: _buildCommentField(),
+                          ),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),

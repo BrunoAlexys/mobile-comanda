@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:mobile_comanda/model/order.dart';
 import 'package:mobile_comanda/util/constants.dart';
@@ -89,10 +88,6 @@ class _CustomOrderState extends State<CustomOrder> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8.0),
-        border: Border.all(
-          color: Utils.hexToColor(AppColors.primaryColor),
-          width: 1.0,
-        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -100,28 +95,31 @@ class _CustomOrderState extends State<CustomOrder> {
           children: [
             Row(
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '#$orderId - Mesa $displayTableNumber',
-                      style: TextStyle(
-                        color: Utils.hexToColor(AppColors.burgundy),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                Padding(
+                  padding: const EdgeInsets.only(top: 16, left: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Itens do Pedido',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
                       ),
-                    ),
-                    widget.time != null
-                        ? Text(
-                            'Pronto ${Utils.formatTime(widget.time!)}',
-                            style: TextStyle(
-                              color: Utils.hexToColor(
-                                AppColors.grayColorSecondary,
+                      widget.time != null
+                          ? Text(
+                              'Pronto ${Utils.formatTime(widget.time!)}',
+                              style: TextStyle(
+                                color: Utils.hexToColor(
+                                  AppColors.grayColorSecondary,
+                                ),
                               ),
-                            ),
-                          )
-                        : Text(''),
-                  ],
+                            )
+                          : Text(''),
+                    ],
+                  ),
                 ),
                 Spacer(),
                 displayStatus.isNotEmpty
@@ -134,7 +132,7 @@ class _CustomOrderState extends State<CustomOrder> {
 
             if (widget.child != null) widget.child!,
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -145,6 +143,7 @@ class _CustomOrderState extends State<CustomOrder> {
                 ),
               ],
             ),
+            const SizedBox(height: 8),
           ],
         ),
       ),

@@ -17,6 +17,9 @@ abstract class _OrderStore with Store {
   ObservableList<OrderItem> orders = ObservableList<OrderItem>();
 
   @observable
+  String orderNumber = '';
+
+  @observable
   int? tableNumber;
 
   @observable
@@ -53,6 +56,15 @@ abstract class _OrderStore with Store {
   int getQuantity(int productId) {
     final index = orders.indexWhere((item) => item.menu.id == productId);
     return index >= 0 ? orders[index].quantity : 0;
+  }
+
+  @action
+  Future<void> fetchNextOrderNumber(int adminId) async {
+    try {
+      orderNumber = await _orderService.getNextOrderNumber(adminId);
+    } catch (e) {
+      orderNumber = '0000';
+    }
   }
 
   @action
@@ -126,6 +138,7 @@ abstract class _OrderStore with Store {
     tableNumber = null;
     appliedFees.clear();
     additionalComment = '';
+    orderNumber = '';
   }
 
   Future<Order> sendOrder(Order order) async {
