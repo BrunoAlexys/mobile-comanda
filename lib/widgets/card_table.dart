@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_comanda/core/app_routes.dart';
+import 'package:mobile_comanda/core/locator.dart';
 import 'package:mobile_comanda/enum/status_table.dart';
+import 'package:mobile_comanda/store/order_store.mobx.dart';
 import 'package:mobile_comanda/util/utils.dart';
 
 class CardTable extends StatefulWidget {
@@ -21,12 +23,15 @@ class CardTable extends StatefulWidget {
 
 class _CardTableState extends State<CardTable> {
   bool _isPressed = false;
+  final OrderStore _orderStore = locator<OrderStore>();
 
   void _handleTap() async {
     FocusScope.of(context).unfocus();
     setState(() {
       _isPressed = true;
     });
+
+    _orderStore.setTableNumber(int.parse(widget.tableNumber));
 
     await Future.delayed(const Duration(milliseconds: 300));
 
