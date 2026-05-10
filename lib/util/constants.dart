@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class AppIcons {
   AppIcons._();
   static const String send = 'assets/icons/send.png';
@@ -16,21 +14,4 @@ class AppColors {
   static const String redAlert = 'FF5F5F';
   static const String burgundy = '7F1D1D';
   static const String grayColorSecondary = '717076';
-}
-
-class CategoryIcon {
-  static const Map<String, IconData> categoryIconMap = {
-    'Bebidas': Icons.local_drink,
-    'Lanches': Icons.fastfood,
-    'Porções': Icons.room_service,
-    'Sobremesas': Icons.icecream,
-    'Entradas': Icons.restaurant_menu,
-    'Massas': Icons.ramen_dining,
-    'Carnes': Icons.outdoor_grill,
-    'Petiscos': Icons.fastfood,
-  };
-
-  static IconData getIconForCategory(String categoryName) {
-    return categoryIconMap[categoryName] ?? Icons.category;
-  }
 }

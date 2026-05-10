@@ -128,8 +128,6 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
 
   void _sendOrder() async {
     if (_orderStore.isLoading || _isProcessing) return;
-    // Problema aqui
-    debugPrint('Numero da mesa: ${_orderStore.tableNumber}');
     if (_orderStore.tableNumber == null || !_orderStore.isOrderValid) {
       if (mounted) {
         CustomAlert.warning(
@@ -257,6 +255,7 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
       builder: (_) {
         if (_isInitializing) {
           return Scaffold(
+            backgroundColor: Colors.white,
             appBar: CustomAppBar(
               title: const Text(
                 'Revisar Pedido',
@@ -296,6 +295,7 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
         );
 
         return Scaffold(
+          backgroundColor: Colors.white,
           appBar: CustomAppBar(
             title: const Text(
               'Revisar Pedido',
@@ -356,12 +356,12 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
                                 borderRadius: const BorderRadius.all(
                                   Radius.circular(8),
                                 ),
-                                boxShadow: const [
+                                boxShadow: [
                                   BoxShadow(
-                                    color: Colors.white,
+                                    color: Colors.black.withOpacity(0.1),
                                     spreadRadius: 2,
-                                    blurRadius: 4,
-                                    offset: Offset(0, 2),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
@@ -425,94 +425,126 @@ class _ReviewOrderScreenState extends State<ReviewOrderScreen> {
                             padding: const EdgeInsets.only(
                               left: 16,
                               right: 16,
-                              top: 24,
+                              top: 4,
                               bottom: 20,
                             ),
-                            child: CustomOrder(
-                              orders: [currentOrder],
-                              tableNumber: currentOrder.tableNumber,
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxHeight: 250,
+                            child: Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: const BorderRadius.all(
+                                  Radius.circular(8),
                                 ),
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: itemsToDisplay.length,
-                                  itemBuilder: (context, index) {
-                                    final item = itemsToDisplay[index];
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 4.0,
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Expanded(
-                                                child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                        left: 16,
-                                                        right: 8,
-                                                      ),
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.start,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        '${item.quantity}x ${item.menu.name}',
-                                                        style: const TextStyle(
-                                                          color: Colors.black,
-                                                          fontSize: 14,
-                                                          fontWeight:
-                                                              FontWeight.w600,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    spreadRadius: 2,
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: CustomOrder(
+                                orders: [currentOrder],
+                                tableNumber: currentOrder.tableNumber,
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxHeight: 250,
+                                  ),
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: itemsToDisplay.length,
+                                    itemBuilder: (context, index) {
+                                      final item = itemsToDisplay[index];
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 4.0,
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                          left: 16,
+                                                          right: 8,
                                                         ),
-                                                      ),
-                                                      const SizedBox(height: 4),
-                                                      Text(
-                                                        item.menu.description,
-                                                        style: TextStyle(
-                                                          color:
-                                                              Utils.hexToColor(
-                                                                '848484',
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .start,
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          '${item.quantity}x ${item.menu.name}',
+                                                          style:
+                                                              const TextStyle(
+                                                                color: Colors
+                                                                    .black,
+                                                                fontSize: 14,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
                                                               ),
-                                                          fontSize: 12,
-                                                          fontStyle:
-                                                              FontStyle.italic,
                                                         ),
-                                                      ),
-                                                    ],
+                                                        const SizedBox(
+                                                          height: 4,
+                                                        ),
+                                                        Text(
+                                                          item.menu.description,
+                                                          style: TextStyle(
+                                                            color:
+                                                                Utils.hexToColor(
+                                                                  '848484',
+                                                                ),
+                                                            fontSize: 12,
+                                                            fontStyle: FontStyle
+                                                                .italic,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                              Text(
-                                                Utils.formatPrice(
-                                                  item.price * item.quantity,
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        right: 16.0,
+                                                      ),
+                                                  child: Text(
+                                                    Utils.formatPrice(
+                                                      item.price *
+                                                          item.quantity,
+                                                    ),
+                                                    style: const TextStyle(
+                                                      color: Colors.black,
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
                                                 ),
-                                                style: const TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          Divider(
-                                            color: Colors.grey.shade300,
-                                            thickness: 1,
-                                            height: 24,
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
+                                              ],
+                                            ),
+                                            Divider(
+                                              color: Colors.grey.shade300,
+                                              thickness: 1,
+                                              height: 24,
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                               ),
                             ),
