@@ -29,7 +29,8 @@ abstract class _TablesStoreBase with Store {
 
   @computed
   List<Tables> get filteredTables {
-    List<Tables> list = allTables;
+    List<Tables> list = allTables.toList();
+
     if (currentFilter != null && currentFilter!.isNotEmpty) {
       list = list
           .where(
@@ -76,5 +77,25 @@ abstract class _TablesStoreBase with Store {
   @action
   void setSearchQuery(String query) {
     searchQuery = query;
+  }
+
+  @action
+  void updateTableStatusWs(Map<String, dynamic> data) {
+    final tableId = data['id'];
+    final newStatusString = data['status'];
+
+    final tableIndex = allTables.indexWhere((t) => t.id == tableId);
+
+    if (tableIndex != -1) {
+      final currentTable = allTables[tableIndex];
+
+      StatusTable newStatus = StatusTable.values.firstWhere(
+        (e) => e.name.toUpperCase() == newStatusString.toString().toUpperCase(),
+        orElse: () => currentTable.status,
+      );
+
+      allTables[tableIndex] = currentTable.copyWith(status: newStatus);
+      allTables = ObservableList.of(allTables);
+    }
   }
 }

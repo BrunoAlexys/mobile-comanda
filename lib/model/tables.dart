@@ -30,4 +30,18 @@ class Tables {
       'statusTable': status.toString().split('.').last,
     };
   }
+
+  Tables copyWith({
+    int? id,
+    int? numberTable,
+    int? chairsAvailable,
+    StatusTable? status,
+  }) {
+    return Tables(
+      id: id ?? this.id,
+      numberTable: numberTable ?? this.numberTable,
+      chairsAvailable: chairsAvailable ?? this.chairsAvailable,
+      status: status ?? this.status,
+    );
+  }
 }

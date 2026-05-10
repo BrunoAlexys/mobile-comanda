@@ -22,8 +22,8 @@ class CustomRateButton extends StatefulWidget {
     required this.id,
     required this.text,
     this.defaultColor = Colors.white,
-    this.clickedColor = Colors.red,
-    this.defaultTextColor = Colors.red,
+    this.clickedColor = const Color(0xFF2C3EAA),
+    this.defaultTextColor = Colors.black,
     this.clickedTextColor = Colors.white,
     this.icon = Icons.add,
     required this.feePercentage,
@@ -54,9 +54,6 @@ class _CustomRateButtonState extends State<CustomRateButton> {
   }
 
   void _toggleFee() {
-    final double calculatedValue =
-        _orderStore.totalOrderPrice * widget.feePercentage;
-
     final feeToToggle = AppliedFee(
       id: widget.id,
       name: widget.text,
@@ -89,12 +86,12 @@ class _CustomRateButtonState extends State<CustomRateButton> {
             ),
             decoration: BoxDecoration(
               color: _isClicked ? widget.clickedColor : widget.defaultColor,
-              borderRadius: BorderRadius.circular(10.0),
+              borderRadius: BorderRadius.circular(8.0),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -107,23 +104,21 @@ class _CustomRateButtonState extends State<CustomRateButton> {
                     color: _isClicked
                         ? widget.clickedTextColor
                         : widget.defaultTextColor,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 SizedBox(
-                  width: 30,
-                  height: 30,
+                  width: 36,
+                  height: 36,
                   child: Material(
-                    color: _isClicked
-                        ? Colors.white
-                        : Utils.hexToColor(AppColors.primaryColor),
+                    color: _isClicked ? Colors.white : const Color(0xFF3B5BEE),
                     shape: const CircleBorder(),
                     clipBehavior: Clip.antiAlias,
                     child: Icon(
                       Icons.add,
                       color: _isClicked
-                          ? Utils.hexToColor(AppColors.primaryColor)
+                          ? const Color(0xFF3B5BEE)
                           : Colors.white,
                     ),
                   ),

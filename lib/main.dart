@@ -7,7 +7,6 @@ import 'package:mobile_comanda/core/locator.dart';
 import 'package:mobile_comanda/service/secure_storage_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
