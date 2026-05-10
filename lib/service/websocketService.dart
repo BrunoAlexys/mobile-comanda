@@ -10,7 +10,7 @@ class WebSocketService {
     stompClient = StompClient(
       config: StompConfig(
         // Passar depois via variavel de ambiente
-        url: 'ws://192.168.255.180:8080/ws',
+        url: 'ws://192.168.255.180:8080/ws-flutter',
         onConnect: onConnectCallback,
         onWebSocketError: (dynamic error) => print('❌ Erro WS: $error'),
         onStompError: (dynamic error) => print('❌ Erro STOMP: $error'),
