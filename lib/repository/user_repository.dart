@@ -7,12 +7,8 @@ class UserRepository {
 
   Future<Map<String, dynamic>> fetchUser(String email) async {
     try {
-<<<<<<< HEAD
-      final response = await _dioClient.get('/users/$email');
-=======
       final response = await _dioClient.get('/admin/$email');
 
->>>>>>> bd2baabcedf73ed8a343c5707b62051ce69f257a
       if (response.statusCode == 200 && response.data != null) {
         return response.data;
       } else {

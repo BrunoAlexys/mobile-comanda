@@ -32,13 +32,6 @@ class AuthInterceptor extends QueuedInterceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-<<<<<<< HEAD
-    if ((err.response?.statusCode == 401 || err.response?.statusCode == 403) &&
-        !_isAuthEndpoint(err.requestOptions.path)) {
-      final secureStorageService = locator<SecureStorageService>();
-      final refreshToken = await secureStorageService.getRefreshToken();
-      if (refreshToken == null) {
-=======
     // CORREÇÃO: Verificar tanto 401 quanto 403
     final statusCode = err.response?.statusCode;
     final isTokenError = statusCode == 401 || statusCode == 403;
@@ -47,7 +40,6 @@ class AuthInterceptor extends QueuedInterceptor {
       if (_isRefreshing) {
         // Adiciona à fila de requisições pendentes
         _pendingRequests.add(err.requestOptions);
->>>>>>> bd2baabcedf73ed8a343c5707b62051ce69f257a
         return handler.next(err);
       }
 

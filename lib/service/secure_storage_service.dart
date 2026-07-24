@@ -13,13 +13,10 @@ class SecureStorageService implements TokenStorageService {
   static const _keyEmail = 'biometric_email';
   static const _keyPassword = 'biometric_password';
   static const _keyBiometricPreference = 'biometric_preference';
-<<<<<<< HEAD
-  static const _keyUserEmail = 'user_email';
-=======
   static const _userIdKey = 'user_id';
   static const _adminIdKey = 'admin_id';
->>>>>>> bd2baabcedf73ed8a343c5707b62051ce69f257a
 
+  @override
   Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
@@ -32,6 +29,7 @@ class SecureStorageService implements TokenStorageService {
     }
   }
 
+  @override
   Future<String?> getAccessToken() async {
     try {
       return await _storage.read(key: _keyAccessToken);
@@ -41,6 +39,7 @@ class SecureStorageService implements TokenStorageService {
     }
   }
 
+  @override
   Future<String?> getRefreshToken() async {
     try {
       return await _storage.read(key: _keyRefreshToken);
@@ -50,6 +49,7 @@ class SecureStorageService implements TokenStorageService {
     }
   }
 
+  @override
   Future<void> clearTokens() async {
     try {
       await _storage.delete(key: _keyAccessToken);
@@ -102,26 +102,18 @@ class SecureStorageService implements TokenStorageService {
 
   Future<void> saveEmail(String email) async {
     try {
-      await _storage.write(key: _keyUserEmail, value: email);
+      await _storage.write(key: _keyEmail, value: email);
     } catch (e) {
-      debugPrint('[SecureStorageService] Falha ao salvar email do usuário: $e');
+      debugPrint('[SecureStorageService] Falha ao salvar email: $e');
     }
   }
 
   Future<String?> getEmail() async {
     try {
-      return await _storage.read(key: _keyUserEmail);
+      return await _storage.read(key: _keyEmail);
     } catch (e) {
-      debugPrint('[SecureStorageService] Falha ao ler email do usuário: $e');
+      debugPrint('[SecureStorageService] Falha ao ler email: $e');
       return null;
-    }
-  }
-
-  Future<void> deleteEmail() async {
-    try {
-      await _storage.delete(key: _keyUserEmail);
-    } catch (e) {
-      debugPrint('[SecureStorageService] Falha ao deletar email do usuário: $e');
     }
   }
 
@@ -167,9 +159,6 @@ class SecureStorageService implements TokenStorageService {
       return false;
     }
   }
-<<<<<<< HEAD
-}
-=======
 
   Future<void> saveUserId(String userId) async {
     try {
@@ -211,4 +200,3 @@ class SecureStorageService implements TokenStorageService {
     }
   }
 }
->>>>>>> bd2baabcedf73ed8a343c5707b62051ce69f257a

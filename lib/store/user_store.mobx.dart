@@ -126,13 +126,7 @@ abstract class _UserStoreBase with Store {
 
     try {
       await _authService.logout();
-<<<<<<< HEAD
-
-      final secureStorage = locator<SecureStorageService>();
-      await secureStorage.deleteEmail();
-=======
       await _secureStorageService.clearUserId();
->>>>>>> bd2baabcedf73ed8a343c5707b62051ce69f257a
 
       runInAction(() {
         user = null;
@@ -152,9 +146,6 @@ abstract class _UserStoreBase with Store {
       debugPrint('[UserStore] Mensagem de erro definida: $errorMessage');
     }
   }
-<<<<<<< HEAD
-}
-=======
 
   @action
   Future<String> getUserId() async {
@@ -176,4 +167,3 @@ abstract class _UserStoreBase with Store {
     return '';
   }
 }
->>>>>>> bd2baabcedf73ed8a343c5707b62051ce69f257a
